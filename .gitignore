@@ -1,0 +1,16 @@
+node_modules/
+dist/
+coverage/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.py[cod]
+*.egg-info/
+.env
+.env.*
+!.env.example
+research/results/*
+!research/results/.gitkeep
+/drizzle/
+

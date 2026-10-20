@@ -1,0 +1,42 @@
+# Progress log
+
+## 2026-10-20 — M1 bootstrap
+
+### Scope
+
+Milestone M1 only: repository bootstrap, service health communication, managed PostgreSQL configuration, initial migration, secure Compose defaults, and basic tests. Vulnerability scanning and LLM integration remain out of scope.
+
+### Completed implementation
+
+- Reconciled README database guidance with the managed-PostgreSQL-only decision.
+- Created npm workspaces for the React web app, Fastify API, and versioned TypeScript contracts.
+- Created the FastAPI scanner with a typed health endpoint.
+- Added web → API → scanner REST/JSON status communication.
+- Added server-only configuration validation for `DATABASE_URL` and certificate-validating TLS by default.
+- Added a Drizzle schema and initial version-controlled migration for `system_metadata`.
+- Added default Compose services for web/API/scanner only, with health checks and container hardening.
+- Added placeholder-only environment documentation and ignored all real environment files.
+
+### Verification evidence
+
+- `npm run typecheck` — passed for API, web, and contracts.
+- `npm test` — passed: 5 API tests and 1 React test.
+- `.venv/bin/pytest services/scanner` — passed: 1 scanner test; one upstream Starlette/AnyIO deprecation warning reported.
+- `.venv/bin/ruff check services/scanner` — passed.
+- `npm run build` — passed for API and production web bundle.
+- `npm audit` — passed with 0 known vulnerabilities.
+- `docker compose config --quiet` with a placeholder `DATABASE_URL` — passed.
+- `docker compose build` — passed for web, API, and scanner images.
+- `docker compose up -d --wait` — all three services reached healthy state.
+- Live probes passed: web `/` returned HTTP 200, API `/health` returned HTTP 200, and API `/api/v1/status` returned both API and scanner as `ok`.
+- `npm run db:migrate` against a disposable PostgreSQL 16 container — passed; `public.system_metadata` was created and queried. The temporary container was removed.
+
+### Blockers and limitations
+
+- The migration was not applied to Supabase because no real `DATABASE_URL` was provided. No credential was requested, generated, or stored.
+- M1 health checks verify service availability; a live database readiness check will be added when persistence enters the vertical slice in M2.
+
+### Next action
+
+Review M1. Do not begin M2 until explicitly approved.
+

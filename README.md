@@ -1,10 +1,48 @@
 # Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents
 
 > **Research title:** A Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents using CTRL F2  
-> **Status:** Planning / implementation kickoff  
+> **Status:** M1 bootstrap implemented and verified locally; awaiting review  
 > **Organization:** CTRL F2 (proposed case-study environment; access and scope require explicit authorization)  
 > **Document role:** Living project overview and progress index. The repository's requirements, architecture, decisions, and experiments provide the detailed source of truth.
+You are the lead software engineer responsible for implementing my Master's cybersecurity capstone project.
 
+First, read the repository's README.md thoroughly. Treat it as the primary project baseline and follow its architecture, requirements, development workflow, research constraints and implementation milestones.
+
+The project is titled:
+
+**A Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents using CTRL F2.**
+
+We are implementing a hybrid cybersecurity assessment platform combining deterministic vulnerability scanning and non-deterministic adaptive security testing.
+
+**Current milestone: M1 — Project Bootstrap (implemented; awaiting review).**
+
+The M1 monorepo includes:
+
+- React + TypeScript frontend.
+- Node.js + TypeScript + Fastify backend.
+- Python + FastAPI scanning service.
+- Supabase-hosted PostgreSQL database accessed by the TypeScript/Fastify backend through Drizzle ORM.
+- Docker Compose orchestration for local application services; no PostgreSQL container is required.
+- Versioned API contracts.
+- Environment configuration examples.
+- Basic unit, integration and service health tests.
+
+Establish working communication between the TypeScript API and Python scanning engine through HTTP/JSON.
+
+Create the initial architecture, requirements and progress documentation specified in the README.
+
+**Important instructions:**
+
+1. Work incrementally, following the milestones in README.md.
+2. Do not implement the actual vulnerability scanning engine or integrate an LLM yet.
+3. Do not introduce unnecessary technologies or services.
+4. Follow secure software engineering practices.
+5. Run relevant tests and verify the services work together.
+6. Update README.md and docs/progress.md with completed work, test results, blockers and next steps.
+7. Do not mark requirements complete unless they have been implemented and verified.
+8. Do not proceed beyond Milestone M1 without my approval.
+
+Milestone M1 is complete locally. Do not proceed to M2 without approval.
 ## 1. Overview
 
 This master's cybersecurity capstone develops and evaluates a **hybrid vulnerability assessment framework** for autonomous AI agent deployments. It combines:
@@ -50,7 +88,7 @@ A **single Git repository (monorepo)** with independently runnable services, orc
 React/TypeScript dashboard
           |
           v
-Fastify/TypeScript API  <----> PostgreSQL
+Fastify/TypeScript API  <----> Supabase PostgreSQL
           |
        HTTP/JSON
           |
@@ -66,6 +104,27 @@ Isolated, authorized AI agent test lab
 
 The API owns persistence and user-facing job management. The scanner returns structured findings via versioned contracts; it should not need direct database access in the initial design. Scans may run asynchronously, with polling for job status. Secure service-to-service communication and bounded job execution are required.
 
+### Database Architecture — Supabase PostgreSQL
+
+The project uses **Supabase-hosted PostgreSQL** as its primary application database.
+
+- Supabase provides managed PostgreSQL hosting.
+- Supabase is used strictly as a managed PostgreSQL provider. Supabase Auth, Storage, Realtime, and other platform services are out of scope unless explicitly approved.
+- The TypeScript/Fastify backend owns database access and schema migrations.
+- Drizzle ORM is the preferred TypeScript database access layer.
+- The Python/FastAPI scanning service communicates with the TypeScript backend through internal HTTP APIs and does not directly access the application database.
+- Database credentials must be provided through server-side environment variables, never committed to the repository, and never exposed to the frontend.
+- Docker Compose runs the local application services without requiring a PostgreSQL container.
+- A local PostgreSQL instance may be used for isolated integration tests or offline development.
+- Database migrations must be version-controlled and reproducible.
+- Research experiments should use synthetic data and avoid exposing sensitive scan evidence in externally hosted databases.
+
+**Required environment variable:**
+
+`DATABASE_URL` — Supabase PostgreSQL connection string.
+
+Use a suitable Supabase connection endpoint for the application's connection lifecycle and configure certificate-validating TLS according to Supabase's documentation. Keep production and experimental data environments separate.
+
 ### Technology choices (provisional)
 
 | Layer | Choice | Purpose |
@@ -73,8 +132,8 @@ The API owns persistence and user-facing job management. The scanner returns str
 | Web | React + TypeScript + Tailwind CSS | Assessment dashboard |
 | API | Node.js + TypeScript + Fastify | Authentication, targets, jobs, reporting API |
 | Scanner | Python + FastAPI | Deterministic and adaptive assessments |
-| Persistence | PostgreSQL | Scan jobs, targets, findings, experiment metadata |
-| Orchestration | Docker Compose | Local development and isolated services |
+| Persistence | Supabase PostgreSQL + Drizzle ORM | Managed application database for scan jobs, targets, findings, and experiment metadata |
+| Orchestration | Docker Compose | Local application services and isolation without a required PostgreSQL container |
 | Lab target | Minimal TypeScript or Python AI agent (TBD) | Controlled security scenarios |
 | Deterministic tools | Custom rules first; evaluate Semgrep, Checkov, Gitleaks | Supported static/configuration checks |
 | Adaptive model | Provider interface; hosted or local model TBD | Generate/adapt bounded test cases |
@@ -116,7 +175,29 @@ The API owns persistence and user-facing job management. The scanner returns str
 └── README.md
 ```
 
-Create directories and files incrementally as implementation reaches them; this layout is a plan, not a claim that code already exists.
+M1 creates the web, API, scanner, contracts, infrastructure, and documentation paths shown above. Research and lab paths remain planned for later milestones.
+
+### M1 local setup
+
+Prerequisites: Node.js 22+, Python 3.12+, Docker with Compose, and a Supabase PostgreSQL connection string.
+
+```bash
+cp .env.example .env
+# Replace DATABASE_URL in .env with the server-side Supabase PostgreSQL connection string.
+npm install
+python3 -m venv .venv
+.venv/bin/pip install -e './services/scanner[dev]'
+npm run typecheck
+npm test
+.venv/bin/pytest services/scanner
+.venv/bin/ruff check services/scanner
+npm run db:migrate
+docker compose up --build --wait
+```
+
+Open `http://localhost:5173`. The API is available at `http://localhost:3000`; the scanner is internal to the Compose network. Stop the stack with `docker compose down`.
+
+`npm run db:migrate` applies the version-controlled Drizzle migration using `DATABASE_URL`. Keep `DATABASE_SSL=true` for Supabase. Set it to `false` only for an explicitly local integration-test database.
 
 ## 5. Key functional requirements
 
@@ -204,8 +285,8 @@ Run adaptive tests repeatedly and report variability. A detection is **confirmed
 
 | Milestone | Deliverable | Acceptance gate | Status |
 |---|---|---|---|
-| M0 — Baseline | README, requirements draft, architecture and decisions | Scope and assumptions documented | **In progress** |
-| M1 — Bootstrap | Monorepo, Compose, web/API/scanner/Postgres skeleton | All services start; health checks pass | Not started |
+| M0 — Baseline | README, requirements draft, architecture and decisions | Scope and assumptions documented | Complete |
+| M1 — Bootstrap | Monorepo, Compose, web/API/scanner/Supabase integration skeleton | All services start; health checks pass | **Complete — awaiting review** |
 | M2 — Vertical slice | API creates scan, scanner returns fixture result, DB stores it, UI displays it | End-to-end test passes | Not started |
 | M3 — Deterministic | Agent-specific rules and unit tests | Known secure/vulnerable fixtures classified | Not started |
 | M4 — Lab | Isolated agent target, synthetic tools/data, ground-truth corpus | Test scenarios repeatable | Not started |
@@ -237,7 +318,7 @@ For each meaningful task, the IDE agent must:
 
 ### Suggested first IDE-agent task
 
-> Read this README and treat it as the project baseline. Initialize M1 only: create the minimal monorepo with React/TypeScript web, Fastify/TypeScript API, FastAPI/Python scanner, PostgreSQL, Docker Compose, versioned API contracts, environment examples, and basic tests. Implement health endpoints and verify API-to-scanner HTTP/JSON communication. Use secure defaults and no real scan targets. Create `docs/requirements.md`, `docs/architecture.md`, and `docs/progress.md`. Do not implement vulnerability scanning, authentication shortcuts, or LLM integration yet. Run available checks, document exact commands and results, and update this README and progress log before finishing.
+> Read this README and treat it as the project baseline. Initialize M1 only: create the minimal monorepo with React/TypeScript web, Fastify/TypeScript API, FastAPI/Python scanner, Supabase PostgreSQL access through Drizzle ORM, Docker Compose for the local application services, versioned API contracts, environment examples, and basic tests. Do not add a PostgreSQL container to Docker Compose. Implement health endpoints and verify API-to-scanner HTTP/JSON communication. Use secure defaults and no real scan targets. Create `docs/requirements.md`, `docs/architecture.md`, and `docs/progress.md`. Do not implement vulnerability scanning, authentication shortcuts, or LLM integration yet. Run available checks, document exact commands and results, and update this README and progress log before finishing.
 
 ## 11. Decisions pending technical review
 
@@ -253,9 +334,9 @@ These are **open decisions**, not blockers to bootstrapping the application skel
 
 ## 12. Current status and next action
 
-**Current status:** README baseline created; implementation not yet started. Supervisor-approved research direction; mentor review of the SRS and organizational arrangements may still be pending.
+**Current status:** M1 is implemented and verified locally. The React web app reports the Fastify API and FastAPI scanner status; Drizzle database configuration and an initial migration are present; the default Compose stack contains no PostgreSQL service. The migration was verified with a disposable local PostgreSQL instance but was not applied to Supabase because no real credential was provided.
 
-**Next action:** Initialize the repository and complete **M1 — Bootstrap** with a running Docker Compose stack, service health endpoints, typed API-to-scanner communication, and passing smoke tests.
+**Next action:** Review M1 and provide explicit approval before work begins on **M2 — Vertical slice**.
 
 ---
 
