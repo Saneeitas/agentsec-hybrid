@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field
 
 from .deterministic.engine import build_result
 from .deterministic.registry import FixtureError, load_fixture
+from .laboratory.corpus import list_scenarios, load_scenario
+from .laboratory.simulator import run_scenario
 
 
 class HealthResponse(BaseModel):
@@ -42,6 +44,15 @@ class DeterministicScanRequest(BaseModel):
     job_id: str = Field(pattern=r"^[0-9a-f-]{36}$")
     fixture_ref: str = Field(pattern=r"^lab://[a-z0-9][a-z0-9-]{1,62}$", max_length=70)
     mode: Literal["deterministic"]
+
+
+class LabRunRequest(BaseModel):
+    scenario_id: str = Field(pattern=r"^LAB-[0-9]{3}-(SECURE|VULNERABLE)$")
+    run_id: str = Field(pattern=r"^[0-9a-f-]{36}$")
+
+
+class LabResetRequest(BaseModel):
+    scenario_id: str = Field(pattern=r"^LAB-[0-9]{3}-(SECURE|VULNERABLE)$")
 
 
 def require_service_token(authorization: str | None = Header(default=None)) -> None:
@@ -93,4 +104,28 @@ async def execute_deterministic_scan(request: DeterministicScanRequest) -> dict[
     except FixtureError as error:
         raise HTTPException(status_code=422, detail=str(error)) from error
     return build_result(request.job_id, request.fixture_ref, manifest)
+
+
+@app.get("/internal/v1/lab/scenarios", dependencies=[Depends(require_service_token)])
+async def laboratory_scenarios() -> list[dict[str, object]]:
+    return list_scenarios()
+
+
+@app.post("/internal/v1/lab/runs", dependencies=[Depends(require_service_token)])
+async def execute_laboratory_scenario(request: LabRunRequest) -> dict[str, object]:
+    try:
+        return run_scenario(load_scenario(request.scenario_id), request.run_id)
+    except ValueError as error:
+        code = str(error)
+        status = 404 if code == "unknown_scenario" else 422
+        raise HTTPException(status_code=status, detail=code) from error
+
+
+@app.post("/internal/v1/lab/reset", dependencies=[Depends(require_service_token)])
+async def reset_laboratory_scenario(request: LabResetRequest) -> dict[str, object]:
+    try:
+        scenario = load_scenario(request.scenario_id)
+    except ValueError as error:
+        raise HTTPException(status_code=404, detail=str(error)) from error
+    return {"contractVersion": "lab-reset/v1", "scenarioId": scenario.scenario_id, "status": "reset", "procedure": scenario.reset_procedure}
 

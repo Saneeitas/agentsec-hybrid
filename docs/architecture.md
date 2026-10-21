@@ -71,3 +71,21 @@ The API bounds and atomically persists result metadata, evaluations, findings, a
 - TLS certificate verification stays enabled for externally hosted PostgreSQL.
 - Only explicitly authorized synthetic targets will be introduced in later milestones.
 
+## M4 laboratory boundary and threat model
+
+```text
+operator → authenticated Fastify scenario API → service-authenticated scanner
+                                                   │
+                                      closed scenario registry
+                                                   │
+                                  deterministic in-memory simulator
+                                                   │
+                                    redacted lab-trace/v1 JSON
+```
+
+The caller selects only an exact registered scenario ID. Actions, policies, resources, tool arguments, paths, URLs, and code cannot be supplied through the interface. Each run loads an immutable fixture, evaluates at most 20 actions for at most one second, bounds serialized evidence to 128 KiB, and discards all state.
+
+Threats addressed include arbitrary tool execution, SSRF, command execution, path traversal, cross-scope synthetic access, missing authorization/approval, evidence leakage, unbounded runs, and ground-truth contamination by scanner output. The runtime has no network, shell, cloud, email, or general filesystem tool implementation. Docker further removes capabilities and external scanner exposure, but is defense in depth and not described as complete isolation.
+
+Development and held-out registries are separate. Ordinary APIs expose only development scenarios. Ground-truth decisions and evidence codes are manually derived from the policy/action pairs and tested independently from deterministic scanner findings.
+

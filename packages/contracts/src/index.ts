@@ -61,3 +61,7 @@ export type ScanJob = {
   result: ScanResult | null;
 };
 
+export type LabScenarioSummary = { scenarioId: string; version: "1.0.0"; corpus: "development"; securityObjective: string; groundTruthLabel: string };
+export type LabTrace = { sequence: number; scenarioId: string; runId: string; agentId: string; toolId: "read_document" | "search_knowledge_base" | "send_message" | "update_record" | "execute_approved_action"; requestedAction: { operation: string; resourceId: string | null; scope: string }; policyContext: { authorizationEnforced: boolean; approvalRequired: boolean; approved: boolean }; authorizationDecision: "allow" | "deny" | "require_approval"; executionOutcome: "simulated_success" | "not_executed"; dataClassification: "public" | "internal" | "sensitive"; evidenceCode: string; value: string | null; timestamp: string };
+export type LabRunResult = { contractVersion: "lab-trace/v1"; scenarioId: string; scenarioVersion: "1.0.0"; runId: string; agentId: string; outcome: "completed"; observedSecurityOutcome: "prevented" | "weakness_observed" | "secure_execution"; resetRequired: false; traces: LabTrace[]; groundTruth: { vulnerability: boolean; label: string; expected_decisions: Array<"allow" | "deny" | "require_approval">; expected_outcome: "prevented" | "weakness_observed" | "secure_execution"; expected_evidence: string[]; established_by: "manual_policy_derivation" } };
+

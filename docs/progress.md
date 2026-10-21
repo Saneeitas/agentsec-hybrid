@@ -127,3 +127,46 @@ Implemented and verified locally; awaiting review.
 
 Review M3. Do not begin M4 without explicit approval.
 
+## 2026-10-21 — M4 isolated agent security laboratory and evaluation corpus
+
+### Scope reconciliation
+
+The roadmap's short M4 definition (isolated agent target, synthetic tools/data, repeatable ground-truth scenarios) is consistent with the approved detailed specification. M4 implements the simulator and corpus only; it does not introduce adaptive scanning, an LLM, hybrid correlation, or comparative experiments.
+
+### Completed implementation
+
+- Added strict `lab-scenario/v1` models for identities, objectives, tool policies, scopes, approvals, synthetic resources, controlled actions, and independently authored ground truth.
+- Added five fixed mock-tool types with no real external side effects.
+- Added 16 development scenarios: secure and vulnerable variants across all eight required security objectives.
+- Added a separately keyed held-out registry excluded from ordinary listing and execution. It is only a separation mechanism at M4, not a completed research corpus.
+- Added deterministic policy evaluation, default denial for missing tools, approval enforcement, per-run state, and `lab-trace/v1` evidence.
+- Added sensitive-value redaction, 20-step, one-second, and 128 KiB output bounds.
+- Added explicit stateless reset and documented why no external cleanup occurs.
+- Added service-authenticated scanner list/run/reset endpoints and operator-authenticated Fastify proxies. No arbitrary tool endpoint exists.
+- Added ADR-0005 plus laboratory architecture, threat model, schema, corpus methodology, evidence, reset, isolation, and limitation documentation.
+
+### Verification evidence
+
+- `.venv/bin/pytest services/scanner` — 34 passed after the final runtime-bound test; covers every secure/vulnerable ground-truth case, policy enforcement, unauthorized denial, sensitive access, repeatability, serialization/redaction, reset, closed/held-out registries, malformed/unknown requests, and step/runtime bounds. One upstream Starlette/AnyIO warning remains.
+- `.venv/bin/ruff check services/scanner` — passed.
+- `npm run typecheck` — passed for API, web, and contracts.
+- `npm test` — passed: 8 API tests and 3 dashboard tests; database suite skipped by default.
+- Disposable PostgreSQL 16 migration and API integration suite — 11 passed, confirming M2/M3 persistence, leasing, cancellation, retry, timeout, recovery, findings, and unsupported modes.
+- `npm run build` — passed for API and dashboard.
+- `npm audit` — 0 known vulnerabilities.
+- `docker compose config --quiet`, image builds, and all three health checks — passed.
+- Containerized workflow — listed 16 scenarios, ran a secure approval scenario with `require_approval`, reset it, and reran the M3 vulnerable fixture with all eight expected deterministic findings.
+- `git diff --check` — passed.
+
+### Limitations and blockers
+
+- The simulator models policy behavior; it is not a full autonomous-agent framework and never executes untrusted code.
+- Docker is defense in depth, not complete isolation. Safety primarily comes from the absence of dangerous capabilities and closed registries.
+- The held-out registry is deliberately minimal and not sufficient for final statistical evaluation.
+- Laboratory traces are returned as JSON but not persisted in PostgreSQL during M4.
+- The configured Supabase endpoint remains unreachable, so existing migrations remain verified on disposable PostgreSQL 16 only.
+
+### Next action
+
+Review M4. Do not begin M5 without explicit approval.
+

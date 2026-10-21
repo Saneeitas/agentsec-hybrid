@@ -59,3 +59,17 @@ The original roadmap summarized M3 as agent-specific rules, tests, and fixture c
 | M3-08 | Verification | Rule, fixture, redaction, traversal, serialization, persistence, lifecycle, UI, build, audit, and Compose checks pass | Verified |
 | M3-09 | Scope boundary | No adaptive LLM testing, attack generation, hybrid correlation, production scanning, remediation, or external scanner integration | Verified |
 
+## Milestone M4 — Isolated Agent Security Laboratory and Evaluation Corpus
+
+The roadmap's concise M4 lab milestone is expanded by the approved specification without changing M1–M3 boundaries.
+
+| ID | Requirement | Acceptance criteria | Status |
+|---|---|---|---|
+| M4-01 | Deterministic simulator | Data-only agent, tools, resources, policies, approvals, and traces; no real I/O or arbitrary execution | Verified |
+| M4-02 | Scenario corpus | Versioned secure/vulnerable scenarios cover all eight required security objectives with independent ground truth | Verified |
+| M4-03 | Safe evidence | Versioned JSON traces are ordered, bounded, reproducible, and redact synthetic sensitive values | Verified |
+| M4-04 | Closed interfaces | Authenticated list/run/reset accepts only registered scenario IDs and no arbitrary tool requests | Verified |
+| M4-05 | Isolation | Closed registries, strict validation, step/time/output limits, no external network, shell, cloud, or arbitrary filesystem access | Verified |
+| M4-06 | Regression | M1–M3 checks and deterministic scan behavior continue to pass | Verified |
+| M4-07 | Scope boundary | No LLM probes, prompt generation, adaptive detection, hybrid correlation, or research experiments | Verified |
+

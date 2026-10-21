@@ -1,7 +1,7 @@
 # Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents
 
 > **Research title:** A Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents using CTRL F2  
-> **Status:** M3 deterministic vulnerability scanning implemented and verified locally; awaiting review
+> **Status:** M4 isolated agent laboratory and evaluation corpus implemented and verified locally; awaiting review
 > **Organization:** CTRL F2 (proposed case-study environment; access and scope require explicit authorization)  
 > **Document role:** Living project overview and progress index. The repository's requirements, architecture, decisions, and experiments provide the detailed source of truth.
 You are the lead software engineer responsible for implementing my Master's cybersecurity capstone project.
@@ -14,7 +14,7 @@ The project is titled:
 
 We are implementing a hybrid cybersecurity assessment platform combining deterministic vulnerability scanning and non-deterministic adaptive security testing.
 
-**Current milestone: M3 — Deterministic Vulnerability Scanning.**
+**Current milestone: M4 — Isolated Agent Security Laboratory and Evaluation Corpus.**
 
 The M1 monorepo includes:
 
@@ -42,7 +42,7 @@ Create the initial architecture, requirements and progress documentation specifi
 7. Do not mark requirements complete unless they have been implemented and verified.
 8. Do not proceed beyond Milestone M1 without my approval.
 
-Milestones M1 and M2 are complete and M3 is approved. Do not proceed to M4 without explicit approval.
+Milestones M1–M3 are complete and M4 is approved. Do not proceed to M5 without explicit approval.
 ## 1. Overview
 
 This master's cybersecurity capstone develops and evaluates a **hybrid vulnerability assessment framework** for autonomous AI agent deployments. It combines:
@@ -224,6 +224,14 @@ The `agent-deployment/v1` manifest covers identity/capabilities, tools, operatio
 
 Evaluations are `passed`, `failed`, `not_applicable`, or `unknown`; only failures generate findings. Stable fingerprints use sanitized rule, target, resource, and evidence attributes. Findings represent configuration weaknesses, not demonstrated runtime exploits.
 
+### M4 isolated agent laboratory
+
+M4 adds a deterministic in-memory simulator for five synthetic tools: `read_document`, `search_knowledge_base`, `send_message`, `update_record`, and `execute_approved_action`. These names model behavior only: they perform no external reads, searches, delivery, operating-system execution, cloud calls, or persistent writes.
+
+Authenticated operators can list, run, and reset exact predefined scenarios through `/api/v1/lab/scenarios`, `/api/v1/lab/runs`, and `/api/v1/lab/reset`. Requests cannot provide tool actions or policies. Sixteen development scenarios provide secure and vulnerable variants for eight objectives; a separate held-out registry is excluded from ordinary execution.
+
+Each `lab-scenario/v1` fixture contains agent identity/objective, policies, synthetic resources, controlled actions, expected decisions/outcome/evidence, an independently derived vulnerability label, and reset instructions. `lab-trace/v1` exports ordered decisions and simulated outcomes with sensitive values redacted. Runs are limited to 20 steps, one second, and 128 KiB of evidence, and all in-memory state is discarded afterward.
+
 ## 5. Key functional requirements
 
 | ID | Requirement | MVP priority |
@@ -314,7 +322,7 @@ Run adaptive tests repeatedly and report variability. A detection is **confirmed
 | M1 — Bootstrap | Monorepo, Compose, web/API/scanner/Supabase integration skeleton | All services start; health checks pass | Complete |
 | M2 — Scan orchestration vertical slice | Constrained target registry, durable scan lifecycle, mock scanner dispatch, persisted results, dashboard | End-to-end lifecycle plus cancellation, retry, leasing, and recovery tests pass | **Complete — awaiting review** |
 | M3 — Deterministic | Agent-specific rules, trusted fixture registry, persistence, and reporting | Known secure/vulnerable fixtures classified and end-to-end findings displayed | Complete; awaiting review |
-| M4 — Lab | Isolated agent target, synthetic tools/data, ground-truth corpus | Test scenarios repeatable | Not started |
+| M4 — Lab | Isolated deterministic simulator, synthetic tools/data, ground-truth corpus | Secure/vulnerable scenarios repeatable with redacted traces | Complete; awaiting review |
 | M5 — Adaptive | Bounded model-assisted tests and evidence capture | Observable outcomes logged; repeated runs supported | Not started |
 | M6 — Hybrid | Finding normalization, validation, deduplication, severity | Traceable cross-scanner results | Not started |
 | M7 — Evaluation | C1/C2/C3 experiments and analysis | Metrics and limitations documented | Not started |
@@ -359,9 +367,9 @@ These are **open decisions**, not blockers to bootstrapping the application skel
 
 ## 12. Current status and next action
 
-**Current status:** M2 is implemented and verified against disposable PostgreSQL and the Docker service stack. It provides an authenticated constrained target registry, durable PostgreSQL leasing, safe mock execution, cancellation, bounded retries/timeouts, expired-lease recovery, persisted results, and dashboard workflows. The configured Supabase direct hostname did not resolve from the development machine, so the M2 migration has not yet been applied to the hosted database.
+**Current status:** M4 is implemented and verified locally with an authenticated, closed-registry deterministic agent simulator, synthetic tools/resources, independently labelled secure/vulnerable scenarios, bounded redacted traces, and explicit stateless reset. M1–M3 regressions remain verified. The configured Supabase direct hostname remains unreachable, so database migrations are verified only against disposable PostgreSQL 16.
 
-**Next action:** Review M3, update `DATABASE_URL` to a reachable Supabase connection/pooler endpoint, and apply migrations. Do not begin **M4 — Adaptive scanning** without explicit approval.
+**Next action:** Review M4 and update `DATABASE_URL` to a reachable Supabase connection/pooler endpoint. Do not begin **M5 — Adaptive scanning** without explicit approval.
 
 ---
 
