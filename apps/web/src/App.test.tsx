@@ -1,17 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { App } from "./App";
-
-afterEach(() => vi.restoreAllMocks());
-
-it("shows API and scanner health returned by the backend", async () => {
-  vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({
-    api: { service: "api", status: "ok", version: "0.1.0" },
-    scanner: { service: "scanner", status: "ok", version: "0.1.0" }
-  }), { status: 200 })));
-
-  render(<App />);
-  expect(await screen.findByText("TypeScript API")).toBeInTheDocument();
-  expect(screen.getByText("Python scanner")).toBeInTheDocument();
-});
-
+afterEach(() => { cleanup(); vi.restoreAllMocks(); });
+it("keeps workflows locked until an operator token is entered", () => { render(<App />); expect(screen.getByText("Operator access")).toBeInTheDocument(); expect(screen.queryByText("Register laboratory target")).not.toBeInTheDocument(); });
+it("loads authenticated empty states", async () => { vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify([]), { status: 200 }))); render(<App />); fireEvent.change(screen.getByLabelText("Operator token"), { target: { value: "x".repeat(32) } }); fireEvent.click(screen.getByText("Open dashboard")); expect(await screen.findByText("Register laboratory target")).toBeInTheDocument(); expect(await screen.findByText("No scan jobs yet.")).toBeInTheDocument(); });

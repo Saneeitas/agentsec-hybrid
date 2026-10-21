@@ -1,7 +1,7 @@
 # Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents
 
 > **Research title:** A Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents using CTRL F2  
-> **Status:** M1 bootstrap implemented and verified locally; awaiting review  
+> **Status:** M2 scan job management and orchestration implemented and verified locally; awaiting review
 > **Organization:** CTRL F2 (proposed case-study environment; access and scope require explicit authorization)  
 > **Document role:** Living project overview and progress index. The repository's requirements, architecture, decisions, and experiments provide the detailed source of truth.
 You are the lead software engineer responsible for implementing my Master's cybersecurity capstone project.
@@ -14,7 +14,7 @@ The project is titled:
 
 We are implementing a hybrid cybersecurity assessment platform combining deterministic vulnerability scanning and non-deterministic adaptive security testing.
 
-**Current milestone: M1 — Project Bootstrap (implemented; awaiting review).**
+**Current milestone: M2 — Scan Job Management and Orchestration (complete; awaiting review).**
 
 The M1 monorepo includes:
 
@@ -42,7 +42,7 @@ Create the initial architecture, requirements and progress documentation specifi
 7. Do not mark requirements complete unless they have been implemented and verified.
 8. Do not proceed beyond Milestone M1 without my approval.
 
-Milestone M1 is complete locally. Do not proceed to M2 without approval.
+Milestone M1 is complete and M2 is approved. Do not proceed beyond M2 without approval.
 ## 1. Overview
 
 This master's cybersecurity capstone develops and evaluates a **hybrid vulnerability assessment framework** for autonomous AI agent deployments. It combines:
@@ -199,6 +199,12 @@ Open `http://localhost:5173`. The API is available at `http://localhost:3000`; t
 
 `npm run db:migrate` applies the version-controlled Drizzle migration using `DATABASE_URL`. Keep `DATABASE_SSL=true` for Supabase. Set it to `false` only for an explicitly local integration-test database.
 
+### M2 operation and security
+
+Set distinct high-entropy `API_AUTH_TOKEN` and `SCANNER_SERVICE_TOKEN` values in `.env`. Enter the operator token into the dashboard at runtime; it is held in memory only. The scanner token is available only to the API and scanner containers.
+
+M2 accepts only confirmed synthetic fixtures with identifiers matching `lab://...`; it never fetches a target URL. Authenticated users can register/update fixtures and create/list/get/cancel deterministic, adaptive, or hybrid mock jobs. PostgreSQL-backed workers atomically lease queued work, retry bounded failures/timeouts, recover expired leases, and persist structured mock results. No vulnerability assessment is performed.
+
 ## 5. Key functional requirements
 
 | ID | Requirement | MVP priority |
@@ -286,8 +292,8 @@ Run adaptive tests repeatedly and report variability. A detection is **confirmed
 | Milestone | Deliverable | Acceptance gate | Status |
 |---|---|---|---|
 | M0 — Baseline | README, requirements draft, architecture and decisions | Scope and assumptions documented | Complete |
-| M1 — Bootstrap | Monorepo, Compose, web/API/scanner/Supabase integration skeleton | All services start; health checks pass | **Complete — awaiting review** |
-| M2 — Vertical slice | API creates scan, scanner returns fixture result, DB stores it, UI displays it | End-to-end test passes | Not started |
+| M1 — Bootstrap | Monorepo, Compose, web/API/scanner/Supabase integration skeleton | All services start; health checks pass | Complete |
+| M2 — Scan orchestration vertical slice | Constrained target registry, durable scan lifecycle, mock scanner dispatch, persisted results, dashboard | End-to-end lifecycle plus cancellation, retry, leasing, and recovery tests pass | **Complete — awaiting review** |
 | M3 — Deterministic | Agent-specific rules and unit tests | Known secure/vulnerable fixtures classified | Not started |
 | M4 — Lab | Isolated agent target, synthetic tools/data, ground-truth corpus | Test scenarios repeatable | Not started |
 | M5 — Adaptive | Bounded model-assisted tests and evidence capture | Observable outcomes logged; repeated runs supported | Not started |
@@ -334,9 +340,9 @@ These are **open decisions**, not blockers to bootstrapping the application skel
 
 ## 12. Current status and next action
 
-**Current status:** M1 is implemented and verified locally. The React web app reports the Fastify API and FastAPI scanner status; Drizzle database configuration and an initial migration are present; the default Compose stack contains no PostgreSQL service. The migration was verified with a disposable local PostgreSQL instance but was not applied to Supabase because no real credential was provided.
+**Current status:** M2 is implemented and verified against disposable PostgreSQL and the Docker service stack. It provides an authenticated constrained target registry, durable PostgreSQL leasing, safe mock execution, cancellation, bounded retries/timeouts, expired-lease recovery, persisted results, and dashboard workflows. The configured Supabase direct hostname did not resolve from the development machine, so the M2 migration has not yet been applied to the hosted database.
 
-**Next action:** Review M1 and provide explicit approval before work begins on **M2 — Vertical slice**.
+**Next action:** Review M2, update `DATABASE_URL` to a reachable Supabase connection/pooler endpoint, and apply migrations. Do not begin **M3 — Deterministic scanning** without explicit approval.
 
 ---
 

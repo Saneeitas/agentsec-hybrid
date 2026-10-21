@@ -1,15 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildApp } from "./app.js";
-import type { AppConfig } from "./config.js";
-
-const config: AppConfig = {
-  databaseUrl: "postgresql://user:password@db.example.test:5432/postgres",
-  databaseSsl: true,
-  port: 3000,
-  webOrigin: "http://localhost:5173",
-  scannerBaseUrl: "http://scanner.test",
-  scannerRequestTimeoutMs: 1000
-};
+import { testConfig as config } from "./test-config.js";
 
 afterEach(() => vi.restoreAllMocks());
 

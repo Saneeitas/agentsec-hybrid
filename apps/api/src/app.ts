@@ -2,11 +2,13 @@ import cors from "@fastify/cors";
 import Fastify from "fastify";
 import type { PlatformStatus, ServiceHealth } from "@asf/contracts";
 import type { AppConfig } from "./config.js";
+import type { Store } from "./store.js";
+import { registerRoutes } from "./routes.js";
 
 const version = "0.1.0";
 type StatusError = { error: "scanner_unavailable" };
 
-export function buildApp(config: AppConfig) {
+export function buildApp(config: AppConfig, store?: Store) {
   const app = Fastify({
     logger: false,
     bodyLimit: 1_048_576,
@@ -15,8 +17,11 @@ export function buildApp(config: AppConfig) {
 
   void app.register(cors, {
     origin: config.webOrigin,
-    methods: ["GET"]
+    methods: ["GET", "POST", "PATCH"],
+    allowedHeaders: ["authorization", "content-type"]
   });
+
+  if (store) registerRoutes(app, store, config);
 
   app.get<{ Reply: ServiceHealth }>("/health", async () => ({
     service: "api",

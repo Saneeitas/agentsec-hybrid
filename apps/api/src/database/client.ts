@@ -14,6 +14,7 @@ export function createDatabase(config: Pick<AppConfig, "databaseUrl" | "database
 
   return {
     db: drizzle(client, { schema }),
+    client,
     close: () => client.end()
   };
 }

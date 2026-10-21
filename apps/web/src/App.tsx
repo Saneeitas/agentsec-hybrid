@@ -1,49 +1,22 @@
-import { useEffect, useState } from "react";
-import type { PlatformStatus } from "@asf/contracts";
+import { FormEvent, useCallback, useEffect, useState } from "react";
+import type { LaboratoryTarget, MockBehavior, ScanJob, ScanMode } from "@asf/contracts";
 
-type ViewState =
-  | { state: "loading" }
-  | { state: "ready"; status: PlatformStatus }
-  | { state: "error" };
-
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
+const base = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:3000";
 
 export function App() {
-  const [view, setView] = useState<ViewState>({ state: "loading" });
+  const [token, setToken] = useState(""); const [activeToken, setActiveToken] = useState("");
+  const [targets, setTargets] = useState<LaboratoryTarget[]>([]); const [jobs, setJobs] = useState<ScanJob[]>([]);
+  const [error, setError] = useState(""); const [loading, setLoading] = useState(false);
+  const api = useCallback(async <T,>(path: string, init?: RequestInit): Promise<T> => { const response = await fetch(`${base}${path}`, { ...init, headers: { "content-type": "application/json", authorization: `Bearer ${activeToken}`, ...init?.headers } }); if (!response.ok) throw new Error(response.status === 401 ? "Invalid operator token." : "Request failed."); return response.json() as Promise<T>; }, [activeToken]);
+  const refresh = useCallback(async () => { if (!activeToken) return; try { const [t, j] = await Promise.all([api<LaboratoryTarget[]>("/api/v1/targets"), api<ScanJob[]>("/api/v1/scans")]); setTargets(t); setJobs(j); setError(""); } catch (cause) { setError(cause instanceof Error ? cause.message : "Request failed."); } finally { setLoading(false); } }, [activeToken, api]);
+  useEffect(() => { if (!activeToken) return; setLoading(true); void refresh(); const timer = setInterval(() => void refresh(), 1500); return () => clearInterval(timer); }, [activeToken, refresh]);
+  async function createTarget(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const form = new FormData(event.currentTarget); try { await api("/api/v1/targets", { method: "POST", body: JSON.stringify({ name: form.get("name"), fixtureRef: `lab://${form.get("fixture")}`, description: form.get("description") || undefined, authorizationConfirmed: true }) }); event.currentTarget.reset(); await refresh(); } catch { setError("Target creation failed."); } }
+  async function createScan(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const form = new FormData(event.currentTarget); try { await api("/api/v1/scans", { method: "POST", body: JSON.stringify({ targetId: form.get("targetId"), mode: form.get("mode") as ScanMode, mockBehavior: form.get("behavior") as MockBehavior }) }); await refresh(); } catch { setError("Scan creation failed."); } }
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetch(`${apiBaseUrl}/api/v1/status`, { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) throw new Error("Platform status is unavailable");
-        return response.json() as Promise<PlatformStatus>;
-      })
-      .then((status) => setView({ state: "ready", status }))
-      .catch((error: unknown) => {
-        if (error instanceof DOMException && error.name === "AbortError") return;
-        setView({ state: "error" });
-      });
-    return () => controller.abort();
-  }, []);
+  if (!activeToken) return <main><p className="eyebrow">CTRL F2 · Isolated research lab</p><h1>Agentic Security Framework</h1><section><h2>Operator access</h2><p>Enter the local operator token. It remains in memory and is not stored by the browser.</p><form onSubmit={(event) => { event.preventDefault(); if (token.length < 32) return setError("Token must contain at least 32 characters."); setError(""); setActiveToken(token); setToken(""); }}><label>Operator token<input type="password" value={token} onChange={(event) => setToken(event.target.value)} required minLength={32} /></label><button>Open dashboard</button></form>{error && <p className="error">{error}</p>}</section></main>;
 
-  return (
-    <main>
-      <p className="eyebrow">CTRL F2 · Research prototype</p>
-      <h1>Agentic Security Framework</h1>
-      <p className="summary">A controlled environment for evidence-led security assessment of authorized autonomous AI agents.</p>
-      <section aria-live="polite">
-        <h2>Platform status</h2>
-        {view.state === "loading" && <p>Checking services…</p>}
-        {view.state === "error" && <p className="error">Services are unavailable.</p>}
-        {view.state === "ready" && (
-          <ul>
-            <li><span>TypeScript API</span><strong>{view.status.api.status}</strong></li>
-            <li><span>Python scanner</span><strong>{view.status.scanner.status}</strong></li>
-          </ul>
-        )}
-      </section>
-      <p className="notice">Only explicitly authorized sandbox targets may be assessed.</p>
-    </main>
-  );
+  return <main className="wide"><header><div><p className="eyebrow">CTRL F2 · M2 mock orchestration</p><h1>Assessment jobs</h1></div><button className="secondary" onClick={() => { setActiveToken(""); setTargets([]); setJobs([]); }}>Lock</button></header>{error && <p className="error banner">{error}</p>}<div className="grid">
+    <section><h2>Register laboratory target</h2><form onSubmit={createTarget}><label>Name<input name="name" maxLength={100} required /></label><label>Fixture identifier<div className="prefix"><span>lab://</span><input name="fixture" pattern="[a-z0-9][a-z0-9-]{1,62}" placeholder="agent-alpha" required /></div></label><label>Description<textarea name="description" maxLength={500} /></label><label className="check"><input type="checkbox" required /> I confirm this is an authorized isolated fixture.</label><button>Register target</button></form></section>
+    <section><h2>Create mock scan</h2>{targets.length === 0 ? <p className="empty">Register a laboratory target first.</p> : <form onSubmit={createScan}><label>Target<select name="targetId">{targets.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}</select></label><label>Mode<select name="mode"><option value="deterministic">Deterministic</option><option value="adaptive">Adaptive</option><option value="hybrid">Hybrid</option></select></label><label>Controlled behavior<select name="behavior"><option value="success">Success</option><option value="failure">Failure</option><option value="timeout">Timeout</option></select></label><button>Queue scan</button></form>}</section></div>
+    <section><div className="section-title"><h2>Recent jobs</h2>{loading && <span>Loading…</span>}</div>{!loading && jobs.length === 0 ? <p className="empty">No scan jobs yet.</p> : <div className="jobs">{jobs.map((item) => <article key={item.id}><div><span className={`status ${item.status}`}>{item.status}</span><h3>{item.mode} · {targets.find((t) => t.id === item.targetId)?.name ?? "Laboratory target"}</h3><p>Attempts {item.attempts}/{item.maxAttempts} · {new Date(item.createdAt).toLocaleString()}</p>{item.errorCode && <p className="error">{item.errorCode}</p>}{item.result && <p className="result">{item.result.summary}</p>}</div>{["queued", "running"].includes(item.status) && <button className="secondary" onClick={() => void api(`/api/v1/scans/${item.id}/cancel`, { method: "POST" }).then(refresh).catch(() => setError("Cancellation failed."))}>Cancel</button>}</article>)}</div>}</section><p className="notice">Execution is synthetic. No vulnerability checks or external network targets are used in M2.</p></main>;
 }
-

@@ -4,6 +4,8 @@ services:
   scanner:
     build:
       context: ./services/scanner
+    environment:
+      SCANNER_SERVICE_TOKEN: ${SCANNER_SERVICE_TOKEN:?SCANNER_SERVICE_TOKEN is required}
     read_only: true
     tmpfs:
       - /tmp:size=16m,mode=1777
@@ -29,6 +31,14 @@ services:
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:5173}
       SCANNER_BASE_URL: http://scanner:8000
       SCANNER_REQUEST_TIMEOUT_MS: ${SCANNER_REQUEST_TIMEOUT_MS:-3000}
+      API_AUTH_TOKEN: ${API_AUTH_TOKEN:?API_AUTH_TOKEN is required}
+      SCANNER_SERVICE_TOKEN: ${SCANNER_SERVICE_TOKEN:?SCANNER_SERVICE_TOKEN is required}
+      WORKER_POLL_INTERVAL_MS: ${WORKER_POLL_INTERVAL_MS:-1000}
+      WORKER_LEASE_MS: ${WORKER_LEASE_MS:-15000}
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-2}
+      SCAN_EXECUTION_TIMEOUT_MS: ${SCAN_EXECUTION_TIMEOUT_MS:-5000}
+      SCAN_MAX_ATTEMPTS: ${SCAN_MAX_ATTEMPTS:-3}
+      SCAN_RETRY_DELAY_MS: ${SCAN_RETRY_DELAY_MS:-500}
     depends_on:
       scanner:
         condition: service_healthy

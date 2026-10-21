@@ -1,6 +1,6 @@
 # Architecture
 
-## M1 component boundaries
+## Current component boundaries
 
 ```text
 Browser
@@ -13,7 +13,7 @@ React web ───────────────► Fastify API ───
                           FastAPI scanner
 ```
 
-The browser receives only the API base URL. The Fastify API is the sole owner of application persistence, Drizzle schema definitions, and migrations. The scanner is intentionally stateless in M1 and communicates only with the API through internal HTTP endpoints.
+The browser receives only the API base URL. The Fastify API is the sole owner of application persistence, Drizzle schema definitions, migrations, and job orchestration. The scanner remains stateless and communicates only with the API through authenticated internal HTTP endpoints.
 
 ## Database boundary
 
@@ -32,7 +32,31 @@ The default Compose project contains `web`, `api`, and `scanner` only. It binds 
 3. Fastify requests `GET /health` from the scanner with a bounded timeout.
 4. Fastify returns both service health objects as versioned JSON.
 
-No scanning operation, target registration, LLM call, or database write is present in M1.
+M1 introduced this health flow. M2 adds authenticated application workflows without adding real scanning or LLM calls.
+
+## M2 job lifecycle
+
+```text
+dashboard → authenticated API → queued PostgreSQL job
+                                  │
+                      atomic lease (SKIP LOCKED)
+                                  ▼
+                            API worker pool
+                                  │ authenticated mock request
+                                  ▼
+                         stateless FastAPI scanner
+                                  │ structured v1 result
+                                  ▼
+                    PostgreSQL result + transition log
+```
+
+Jobs move through `queued → running → completed|failed|cancelled`. Transient failures and timeouts return to `queued` until their finite attempt budget is exhausted. Running jobs carry a lease owner and expiry; another worker may reclaim an expired lease after interruption. A transaction and row lock prevent simultaneous claims. Cancellation of queued work is immediate; cancellation requested during a mock call is checked before result persistence.
+
+Application tables (`assessment_targets`, `scan_jobs`, `scan_job_transitions`, and `mock_scan_results`) are separate from future experimental evidence. Targets use non-network `lab://` fixture references. The worker never dereferences them, preventing arbitrary URL scanning and SSRF in M2.
+
+## M2 authentication boundary
+
+Target and scan APIs require an operator bearer token. The dashboard accepts it interactively and retains it only in memory. The scanner execution endpoint requires a distinct service token and is not published outside the Compose network. These tokens are a local-research control, not a multi-user identity system.
 
 ## Trust assumptions
 

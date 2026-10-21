@@ -8,6 +8,13 @@
       "when": 1792444800000,
       "tag": "0000_initial_system_metadata",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792501200000,
+      "tag": "0001_scan_orchestration",
+      "breakpoints": true
     }
   ]
 }
