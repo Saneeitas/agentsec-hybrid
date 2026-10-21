@@ -8,7 +8,7 @@ import type { Store } from "./store.js";
 const id = z.uuid();
 const targetCreate = z.object({ name: z.string().trim().min(1).max(100), fixtureRef: z.string().regex(/^lab:\/\/[a-z0-9][a-z0-9-]{1,62}$/), description: z.string().trim().max(500).optional(), authorizationConfirmed: z.literal(true) }).strict();
 const targetUpdate = z.object({ name: z.string().trim().min(1).max(100).optional(), description: z.string().trim().max(500).nullable().optional() }).strict().refine((v) => Object.keys(v).length > 0);
-const scanCreate = z.object({ targetId: id, mode: z.enum(["deterministic", "adaptive", "hybrid"]) }).strict();
+const scanCreate = z.object({ targetId: id, mode: z.enum(["deterministic", "adaptive", "hybrid"]), adaptiveAssessmentMode: z.enum(["simulator", "model_mediated"]).default("simulator") }).strict();
 const labScenario = z.object({ scenarioId: z.string().regex(/^LAB-[0-9]{3}-(SECURE|VULNERABLE)$/) }).strict();
 
 function parse<T>(schema: z.ZodType<T>, value: unknown, reply: { code: (status: number) => { send: (body: unknown) => unknown } }): T | undefined {

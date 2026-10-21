@@ -8,6 +8,9 @@ from pydantic import BaseModel, Field
 
 from .deterministic.engine import build_result
 from .deterministic.registry import FixtureError, load_fixture
+from .adaptive.engine import execute_adaptive
+from .adaptive.models import AdaptiveBudgets, AdaptiveRequest
+from .adaptive.provider import ProviderError, configured_provider
 from .laboratory.corpus import list_scenarios, load_scenario
 from .laboratory.simulator import run_scenario
 
@@ -128,4 +131,20 @@ async def reset_laboratory_scenario(request: LabResetRequest) -> dict[str, objec
     except ValueError as error:
         raise HTTPException(status_code=404, detail=str(error)) from error
     return {"contractVersion": "lab-reset/v1", "scenarioId": scenario.scenario_id, "status": "reset", "procedure": scenario.reset_procedure}
+
+
+@app.post("/internal/v1/adaptive-scans", dependencies=[Depends(require_service_token)])
+async def execute_adaptive_scan(request: AdaptiveRequest) -> dict[str, object]:
+    try:
+        provider = configured_provider()
+        budgets = AdaptiveBudgets(
+            max_probes=int(os.environ.get("ADAPTIVE_MAX_PROBES", "4")),
+            max_provider_tokens=int(os.environ.get("ADAPTIVE_MAX_PROVIDER_TOKENS", "1024")),
+            max_wall_time_ms=int(os.environ.get("ADAPTIVE_MAX_WALL_TIME_MS", "5000")),
+        )
+        return await execute_adaptive(request, provider, budgets)
+    except ProviderError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
 

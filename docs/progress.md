@@ -170,3 +170,45 @@ The roadmap's short M4 definition (isolated agent target, synthetic tools/data, 
 
 Review M4. Do not begin M5 without explicit approval.
 
+## 2026-10-21 — M5 adaptive security assessment engine
+
+### Scope reconciliation
+
+The roadmap defines M5 as bounded model-assisted testing with observable evidence. The approved specification expands this into explicit adaptive components, two execution modes, evidence classifications, persistence, and reporting. It does not alter M4 ground truth or begin M6 correlation/M7 evaluation.
+
+### Completed implementation
+
+- Added versioned probe/result contracts and separate provider, validation, planning/execution, evidence evaluation, and normalization code.
+- Added all eight controlled probe classes with recorded selection rationale and strict scenario-variant validation.
+- Added deterministic offline mock provider with reproducible scripted success/error/timeout/malformed sequences, plus an optional environment-configured OpenAI-compatible adapter with structured JSON, timeouts, model/prompt versions, token metadata, and no hardcoded credentials.
+- Added simulator and model-mediated execution labels. Every probe still executes through the M4 scenario registry and independent policy/tool gateway.
+- Added evidence classifications and confirmed findings only for observed successful prohibited synthetic behavior; provider claims are ignored.
+- Added four-probe, 1,024-token, five-second defaults plus existing scanner/job bounds.
+- Added migration `0003_adaptive_assessment`, adaptive job mode metadata, result/probe/finding persistence, worker dispatch, cancellation-safe completion, and explicit hybrid rejection.
+- Extended the dashboard with adaptive mode selection, probe counts, classification, evidence mode, provider/model metadata, findings, and no-finding/inconclusive states.
+- Added ADR-0006 and adaptive architecture, provider, budget, evidence, and limitation documentation.
+
+### Verification evidence
+
+- `.venv/bin/pytest services/scanner` — 46 passed after scripted mock-sequence coverage; adaptive tests include reproducible generation, predefined error/timeout/malformed responses, all probe classes, validation, selection, probe/token budgets, real-adapter timeout handling, false success claims, inconclusive evidence, redaction, authorization boundaries, and endpoint contracts. M1–M4 scanner regressions passed.
+- `.venv/bin/ruff check services/scanner` — passed.
+- `npm run typecheck` — passed for API, web, and contracts.
+- `npm test` — passed: 8 API tests and 4 dashboard tests; database suite skipped by default.
+- Disposable PostgreSQL 16 migration plus API integration suite — 14 passed, including adaptive persistence, retry, cancellation, and M2/M3 lifecycle regressions.
+- `npm run build` — passed for API and dashboard.
+- `npm audit` — 0 known vulnerabilities.
+- Docker Compose configuration, image builds, and all service health checks — passed.
+- Containerized vertical slice — vulnerable simulator scan completed with one confirmed finding; secure mock-mediated scan completed with no violation observed; hybrid failed as unsupported; deterministic regression returned eight findings.
+
+### Limitations and blockers
+
+- No real provider credential was supplied. The optional real adapter and real model-mediated behavior are not verified; mock-mediated execution validates contracts/gateway plumbing only.
+- The adapter targets an operator-configured OpenAI-compatible chat-completions interface; provider-specific compatibility must be verified before research use.
+- Adaptive coverage is restricted to reviewed M4 scenarios and four probes by default. It is not a production or external-target scanner.
+- M5 does not correlate deterministic/adaptive findings or calculate comparative research metrics.
+- Migration `0003_adaptive_assessment` is verified on disposable PostgreSQL 16, not the unreachable configured Supabase endpoint.
+
+### Next action
+
+Review M5. Do not begin M6 without explicit approval.
+

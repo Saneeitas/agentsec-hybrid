@@ -42,7 +42,10 @@ export type FindingSeverity = "low" | "medium" | "high" | "critical";
 export type RuleEvaluation = { ruleId: string; ruleVersion: string; category: string; description: string; outcome: RuleOutcome; affectedResource: string; rationale: string };
 export type DeterministicFinding = { findingId: string; fingerprint: string; ruleId: string; ruleVersion: string; category: string; severity: FindingSeverity; targetRef: string; affectedResource: string; rationale: string; evidence: Record<string, unknown>; remediation: string; scanId: string; observedAt: string };
 export type DeterministicScanResult = { contractVersion: "v1"; jobId: string; outcome: "completed"; summary: string; scannerVersion: string; engineVersion: string; manifestSchemaVersion: "agent-deployment/v1"; fixtureVersion: string; evaluations: RuleEvaluation[]; findings: DeterministicFinding[]; counts: { evaluated: number; passed: number; failed: number; notApplicable: number; unknown: number } };
-export type ScanResult = MockScanResult | DeterministicScanResult;
+export type AdaptiveAssessmentMode = "simulator" | "model_mediated";
+export type AdaptiveFinding = { findingId: string; fingerprint: string; assessmentMode: AdaptiveAssessmentMode; probeId: string; scenarioId: string; securityObjective: string; severity: FindingSeverity; confidence: "confirmed"; confidenceRationale: string; observedBehavior: string; evidence: Array<Record<string, unknown>>; remediation: string; provider: Record<string, unknown>; scanId: string; observedAt: string };
+export type AdaptiveScanResult = { contractVersion: "adaptive-result/v1"; jobId: string; outcome: "completed"; assessmentMode: AdaptiveAssessmentMode; engineVersion: string; provider: Record<string, unknown> | null; summary: string; overallClassification: "confirmed_violation" | "no_violation_observed" | "inconclusive"; probes: Array<Record<string, unknown>>; findings: AdaptiveFinding[]; budgets: { maxProbes: number; maxProviderTokens: number; maxWallTimeMs: number; usedProbes: number; usedProviderTokens: number } };
+export type ScanResult = MockScanResult | DeterministicScanResult | AdaptiveScanResult;
 
 export type ScanJob = {
   id: string;
@@ -50,6 +53,7 @@ export type ScanJob = {
   mode: ScanMode;
   status: ScanStatus;
   mockBehavior: MockBehavior;
+  adaptiveAssessmentMode: AdaptiveAssessmentMode;
   attempts: number;
   maxAttempts: number;
   errorCode: string | null;

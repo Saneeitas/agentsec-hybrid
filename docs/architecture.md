@@ -89,3 +89,21 @@ Threats addressed include arbitrary tool execution, SSRF, command execution, pat
 
 Development and held-out registries are separate. Ordinary APIs expose only development scenarios. Ground-truth decisions and evidence codes are manually derived from the policy/action pairs and tested independently from deterministic scanner findings.
 
+## M5 adaptive assessment flow
+
+```text
+adaptive job → bounded planner → provider → strict probe validator
+                                            │
+                          reviewed scenario mapping only
+                                            ▼
+                              M4 policy/tool gateway
+                                            ▼
+                      sanitized trace → invariant evaluator
+                                            ▼
+                     adaptive result/findings → Fastify persistence
+```
+
+The deterministic rule engine and adaptive engine share neither decision logic nor result tables. The adaptive planner sees prior classifications, not unrestricted target state. Provider output is untrusted and must match the exact expected probe ID, class, and secure/vulnerable scenario variant. Model-mediated proposals still pass through M4 authorization, scope, and approval controls.
+
+The API worker retains PostgreSQL leasing, timeout, retry, recovery, and cancellation-before-persistence semantics. `adaptive_scan_results` and `adaptive_findings` store application reporting records. Hybrid correlation across deterministic and adaptive records is intentionally absent until M6.
+

@@ -13,3 +13,13 @@ it("displays deterministic findings and remediation", async () => {
   expect(await screen.findByText("DET-001 · tool/shell")).toBeInTheDocument();
   expect(screen.getByText("Remediation: Constrain operations")).toBeInTheDocument();
 });
+it("distinguishes simulator adaptive evidence and inconclusive states", async () => {
+  const target = { id: "10000000-0000-0000-0000-000000000000", name: "Secure fixture", fixtureRef: "lab://secure-agent", description: null, authorizationConfirmed: true, createdAt: "2026-10-21T00:00:00Z", updatedAt: "2026-10-21T00:00:00Z" };
+  const result = { contractVersion: "adaptive-result/v1", jobId: "30000000-0000-0000-0000-000000000000", outcome: "completed", assessmentMode: "simulator", engineVersion: "1.0.0", provider: { provider: "mock", model: "deterministic-mock-v1" }, summary: "No violation", overallClassification: "inconclusive", probes: [], findings: [], budgets: { maxProbes: 4, maxProviderTokens: 1024, maxWallTimeMs: 5000, usedProbes: 0, usedProviderTokens: 0 } };
+  const job = { id: result.jobId, targetId: target.id, mode: "adaptive", status: "completed", mockBehavior: "success", adaptiveAssessmentMode: "simulator", attempts: 1, maxAttempts: 3, errorCode: null, createdAt: "2026-10-21T00:00:00Z", updatedAt: "2026-10-21T00:00:01Z", startedAt: "2026-10-21T00:00:00Z", completedAt: "2026-10-21T00:00:01Z", cancelRequestedAt: null, result };
+  vi.stubGlobal("fetch", vi.fn((input: string | URL | Request) => Promise.resolve(new Response(JSON.stringify(String(input).endsWith("/targets") ? [target] : [job]), { status: 200 }))));
+  render(<App />); fireEvent.change(screen.getByLabelText("Operator token"), { target: { value: "x".repeat(32) } }); fireEvent.click(screen.getByText("Open dashboard"));
+  expect(await screen.findByText(/Adaptive outcome: inconclusive/)).toBeInTheDocument();
+  expect(screen.getByText(/Evidence mode: Simulator-based/)).toBeInTheDocument();
+  expect(screen.getByText("No evidence-backed violation finding was produced.")).toBeInTheDocument();
+});

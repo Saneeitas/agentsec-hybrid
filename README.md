@@ -1,7 +1,7 @@
 # Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents
 
 > **Research title:** A Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents using CTRL F2  
-> **Status:** M4 isolated agent laboratory and evaluation corpus implemented and verified locally; awaiting review
+> **Status:** M5 adaptive security assessment engine implemented and verified locally with the mock provider; awaiting review
 > **Organization:** CTRL F2 (proposed case-study environment; access and scope require explicit authorization)  
 > **Document role:** Living project overview and progress index. The repository's requirements, architecture, decisions, and experiments provide the detailed source of truth.
 You are the lead software engineer responsible for implementing my Master's cybersecurity capstone project.
@@ -14,7 +14,7 @@ The project is titled:
 
 We are implementing a hybrid cybersecurity assessment platform combining deterministic vulnerability scanning and non-deterministic adaptive security testing.
 
-**Current milestone: M4 — Isolated Agent Security Laboratory and Evaluation Corpus.**
+**Current milestone: M5 — Adaptive Security Assessment Engine.**
 
 The M1 monorepo includes:
 
@@ -42,7 +42,7 @@ Create the initial architecture, requirements and progress documentation specifi
 7. Do not mark requirements complete unless they have been implemented and verified.
 8. Do not proceed beyond Milestone M1 without my approval.
 
-Milestones M1–M3 are complete and M4 is approved. Do not proceed to M5 without explicit approval.
+Milestones M1–M4 are complete and M5 is approved. Do not proceed to M6 without explicit approval.
 ## 1. Overview
 
 This master's cybersecurity capstone develops and evaluates a **hybrid vulnerability assessment framework** for autonomous AI agent deployments. It combines:
@@ -207,7 +207,7 @@ M2 accepts only confirmed synthetic fixtures with identifiers matching `lab://..
 
 ### M3 deterministic scanning
 
-Successful deterministic jobs now run a data-only rule engine. Register `lab://secure-agent`, `lab://vulnerable-agent`, or `lab://incomplete-agent`. Unknown, malformed, traversal-like, or unsupported-version fixtures fail closed. Adaptive and hybrid jobs terminate with `unsupported_scan_mode` and never report a false successful assessment.
+Successful deterministic jobs run a data-only rule engine. Register `lab://secure-agent`, `lab://vulnerable-agent`, or `lab://incomplete-agent`. Unknown, malformed, traversal-like, or unsupported-version fixtures fail closed. M5 subsequently adds adaptive execution; hybrid jobs remain unsupported until M6.
 
 The `agent-deployment/v1` manifest covers identity/capabilities, tools, operations, authorization/approval, resource scopes, credential references/redaction, network controls, and deployment controls. Missing or unknown values remain insufficient evidence.
 
@@ -231,6 +231,16 @@ M4 adds a deterministic in-memory simulator for five synthetic tools: `read_docu
 Authenticated operators can list, run, and reset exact predefined scenarios through `/api/v1/lab/scenarios`, `/api/v1/lab/runs`, and `/api/v1/lab/reset`. Requests cannot provide tool actions or policies. Sixteen development scenarios provide secure and vulnerable variants for eight objectives; a separate held-out registry is excluded from ordinary execution.
 
 Each `lab-scenario/v1` fixture contains agent identity/objective, policies, synthetic resources, controlled actions, expected decisions/outcome/evidence, an independently derived vulnerability label, and reset instructions. `lab-trace/v1` exports ordered decisions and simulated outcomes with sensitive values redacted. Runs are limited to 20 steps, one second, and 128 KiB of evidence, and all in-memory state is discarded afterward.
+
+### M5 adaptive security assessment
+
+Adaptive jobs now execute through separate planner, provider, validator, laboratory adapter, evidence evaluator, and finding normalizer components. Supported probe classes cover prompt injection, unauthorized tool use, approval bypass, cross-scope access, sensitive disclosure, tool-output injection, role manipulation, and multi-step influence.
+
+The default `mock` provider is deterministic and offline. It supports reproducible structured probe sequences plus predefined error, timeout, and malformed-response outcomes for tests. An optional OpenAI-compatible adapter reads its endpoint, key, and model exclusively from server environment variables and is never selected unless `ADAPTIVE_PROVIDER=openai_compatible` is set explicitly. The real adapter has not been tested because no authorized credentials were available; mock results do not establish real-model prompt-injection vulnerability.
+
+Adaptive scans support `simulator` and `model_mediated` execution labels. A model-mediated proposal is treated as untrusted and still passes through the closed scenario validator and independent M4 tool gateway. A mock-provider model-mediated run validates plumbing only.
+
+Findings require an observed successful prohibited action or disclosure in a sanitized trace. Model claims or suggested tool calls never establish success. Results report confirmed violation, no violation observed, or inconclusive; execution errors remain failed jobs with error codes. Default budgets are four probes, 1,024 provider tokens, five seconds, and the existing worker timeout.
 
 ## 5. Key functional requirements
 
@@ -323,7 +333,7 @@ Run adaptive tests repeatedly and report variability. A detection is **confirmed
 | M2 — Scan orchestration vertical slice | Constrained target registry, durable scan lifecycle, mock scanner dispatch, persisted results, dashboard | End-to-end lifecycle plus cancellation, retry, leasing, and recovery tests pass | **Complete — awaiting review** |
 | M3 — Deterministic | Agent-specific rules, trusted fixture registry, persistence, and reporting | Known secure/vulnerable fixtures classified and end-to-end findings displayed | Complete; awaiting review |
 | M4 — Lab | Isolated deterministic simulator, synthetic tools/data, ground-truth corpus | Secure/vulnerable scenarios repeatable with redacted traces | Complete; awaiting review |
-| M5 — Adaptive | Bounded model-assisted tests and evidence capture | Observable outcomes logged; repeated runs supported | Not started |
+| M5 — Adaptive | Bounded evidence-first adaptive planner, providers, lab execution, persistence, and reporting | Mock-provider workflow verified; real provider explicitly unverified | Complete; awaiting review |
 | M6 — Hybrid | Finding normalization, validation, deduplication, severity | Traceable cross-scanner results | Not started |
 | M7 — Evaluation | C1/C2/C3 experiments and analysis | Metrics and limitations documented | Not started |
 | M8 — Handover | Documentation, deployment instructions, demo | Reproducible setup and final review | Not started |
@@ -367,9 +377,9 @@ These are **open decisions**, not blockers to bootstrapping the application skel
 
 ## 12. Current status and next action
 
-**Current status:** M4 is implemented and verified locally with an authenticated, closed-registry deterministic agent simulator, synthetic tools/resources, independently labelled secure/vulnerable scenarios, bounded redacted traces, and explicit stateless reset. M1–M3 regressions remain verified. The configured Supabase direct hostname remains unreachable, so database migrations are verified only against disposable PostgreSQL 16.
+**Current status:** M5 is implemented and locally verified using the deterministic mock provider. Adaptive simulator and mock-mediated jobs are bounded, evidence-first, persisted, and displayed; hybrid remains unsupported. M1–M4 regressions remain verified. The optional real-provider adapter and hosted Supabase migration remain unverified.
 
-**Next action:** Review M4 and update `DATABASE_URL` to a reachable Supabase connection/pooler endpoint. Do not begin **M5 — Adaptive scanning** without explicit approval.
+**Next action:** Review M5 and update `DATABASE_URL` to a reachable Supabase connection/pooler endpoint. Do not begin **M6 — Hybrid correlation** without explicit approval.
 
 ---
 

@@ -73,3 +73,18 @@ The roadmap's concise M4 lab milestone is expanded by the approved specification
 | M4-06 | Regression | M1–M3 checks and deterministic scan behavior continue to pass | Verified |
 | M4-07 | Scope boundary | No LLM probes, prompt generation, adaptive detection, hybrid correlation, or research experiments | Verified |
 
+## Milestone M5 — Adaptive Security Assessment Engine
+
+The roadmap's bounded model-assisted testing gate is expanded by the approved M5 specification. Hybrid correlation and comparative evaluation remain later milestones.
+
+| ID | Requirement | Acceptance criteria | Status |
+|---|---|---|---|
+| M5-01 | Component boundaries | Versioned planner, generator/provider, validator, lab adapter, evidence evaluator, and normalizer remain separate from deterministic rules | Verified |
+| M5-02 | Provider abstraction | Offline deterministic mock and optional environment-configured real adapter enforce structured output, timeout, token, model, and prompt metadata | Verified |
+| M5-03 | Bounded adaptation | Eight controlled probe classes, rationale-bearing selection, finite probes/steps/time/tokens, and no autonomous unbounded loop | Verified |
+| M5-04 | Evidence integrity | Confirmed violations require observed allowed prohibited action/disclosure; claims alone are ignored | Verified |
+| M5-05 | Execution modes | Simulator and model-mediated modes are distinguished and all proposed actions pass through the independent lab gateway | Verified |
+| M5-06 | Lifecycle integration | Adaptive jobs are authenticated, leased, cancellable, retryable, persisted, and displayed; hybrid remains unsupported | Verified |
+| M5-07 | Security | Closed targets/scenarios, strict validation, redaction, no arbitrary I/O/code/tool execution, and explicit unsupported configurations | Verified |
+| M5-08 | Verification and scope | Mock workflows and regressions pass without paid access; no M6/M7 functionality | Verified |
+
