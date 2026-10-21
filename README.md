@@ -1,7 +1,7 @@
 # Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents
 
 > **Research title:** A Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents using CTRL F2  
-> **Status:** M5 adaptive security assessment engine implemented and verified locally with the mock provider; awaiting review
+> **Status:** M7 controlled comparative evaluation completed and verified locally; awaiting review
 > **Organization:** CTRL F2 (proposed case-study environment; access and scope require explicit authorization)  
 > **Document role:** Living project overview and progress index. The repository's requirements, architecture, decisions, and experiments provide the detailed source of truth.
 You are the lead software engineer responsible for implementing my Master's cybersecurity capstone project.
@@ -14,7 +14,7 @@ The project is titled:
 
 We are implementing a hybrid cybersecurity assessment platform combining deterministic vulnerability scanning and non-deterministic adaptive security testing.
 
-**Current milestone: M5 — Adaptive Security Assessment Engine.**
+**Current milestone: M7 — Experimental Evaluation and Comparative Analysis.**
 
 The M1 monorepo includes:
 
@@ -42,7 +42,7 @@ Create the initial architecture, requirements and progress documentation specifi
 7. Do not mark requirements complete unless they have been implemented and verified.
 8. Do not proceed beyond Milestone M1 without my approval.
 
-Milestones M1–M4 are complete and M5 is approved. Do not proceed to M6 without explicit approval.
+Milestones M1–M6 are complete and M7 is approved. Do not proceed to M8 without explicit approval.
 ## 1. Overview
 
 This master's cybersecurity capstone develops and evaluates a **hybrid vulnerability assessment framework** for autonomous AI agent deployments. It combines:
@@ -242,6 +242,22 @@ Adaptive scans support `simulator` and `model_mediated` execution labels. A mode
 
 Findings require an observed successful prohibited action or disclosure in a sanitized trace. Model claims or suggested tool calls never establish success. Results report confirmed violation, no violation observed, or inconclusive; execution errors remain failed jobs with error codes. Default budgets are four probes, 1,024 provider tokens, five seconds, and the existing worker timeout.
 
+### M6 hybrid findings correlation
+
+Hybrid jobs run the deterministic component and then the adaptive component against an exact, reviewed fixture-to-scenario mapping. M6 supports `lab://secure-agent` and `lab://vulnerable-agent`; unknown or ambiguous mappings fail closed. The default adaptive provider remains the deterministic offline mock.
+
+The versioned correlation engine uses explicit DET rule-to-adaptive probe mappings and exact resource/objective criteria, never unrestricted text similarity. It reports corroborated, configuration-only, behavior-only, contradictory/mitigating, inconclusive, and uncorrelated evidence. A `no_violation_observed` result is mitigating evidence for the tested action, not proof that the target is secure.
+
+Unified findings retain references to the original deterministic findings, adaptive findings, probes, and observed outcomes. Stable fingerprints provide deterministic deduplication and ordering. Configuration severity is not automatically raised by agreement; evidence strength is represented by the correlation outcome. If either required component fails or times out, the job is failed with a persisted partial report and any safe completed evidence. Ground-truth labels are not available to normal hybrid execution, and M6 makes no comparative-effectiveness claim.
+
+### M7 controlled comparative evaluation
+
+M7 adds a frozen, independently labeled five-case/eight-objective evaluation corpus and a ground-truth-isolated harness for C1 deterministic, C2 adaptive, and C3 hybrid conditions. Scanner execution receives only exact closed fixture/scenario mappings; labels enter only during post-execution scoring. Vulnerability instances are matched through enumerated rule/probe identifiers, and duplicate findings count once.
+
+The prospective protocol specifies eligibility, undefined metrics, failures, three repetitions, rotating condition order, descriptive analysis, and threats to validity. Pilot artifacts are separated from the final `m7-final-001` study. Machine-readable raw/scored results, CSV metrics, manifests, SHA-256 hashes, failures/exclusions, comparative summary, and limitations are under `research/experiments`.
+
+The final controlled simulation completed all 45 runs. Eligibility-adjusted case-level precision, recall, F1, evidence coverage, completion, and detected-set reproducibility were 1.0 for all conditions, with zero observed false positives. These values describe only the deliberately constrained synthetic corpus: C1 covered 31 eligible units, C2 only 6, and C3 32. They do not demonstrate statistical superiority, production effectiveness, or real-model prompt-injection detection. No inferential test was performed because the small purposive corpus and deterministic mock repetitions do not support it.
+
 ## 5. Key functional requirements
 
 | ID | Requirement | MVP priority |
@@ -334,8 +350,8 @@ Run adaptive tests repeatedly and report variability. A detection is **confirmed
 | M3 — Deterministic | Agent-specific rules, trusted fixture registry, persistence, and reporting | Known secure/vulnerable fixtures classified and end-to-end findings displayed | Complete; awaiting review |
 | M4 — Lab | Isolated deterministic simulator, synthetic tools/data, ground-truth corpus | Secure/vulnerable scenarios repeatable with redacted traces | Complete; awaiting review |
 | M5 — Adaptive | Bounded evidence-first adaptive planner, providers, lab execution, persistence, and reporting | Mock-provider workflow verified; real provider explicitly unverified | Complete; awaiting review |
-| M6 — Hybrid | Finding normalization, validation, deduplication, severity | Traceable cross-scanner results | Not started |
-| M7 — Evaluation | C1/C2/C3 experiments and analysis | Metrics and limitations documented | Not started |
+| M6 — Hybrid | Explicit deterministic/adaptive correlation, provenance, partial reports, and dashboard | Traceable cross-scanner results | Complete; awaiting review |
+| M7 — Evaluation | Frozen protocol/corpus, isolated C1/C2/C3 runner, scoring, artifacts, and descriptive analysis | Metrics and limitations documented | Complete; awaiting review |
 | M8 — Handover | Documentation, deployment instructions, demo | Reproducible setup and final review | Not started |
 
 ## 10. Development workflow and AI IDE agent instructions
@@ -377,9 +393,9 @@ These are **open decisions**, not blockers to bootstrapping the application skel
 
 ## 12. Current status and next action
 
-**Current status:** M5 is implemented and locally verified using the deterministic mock provider. Adaptive simulator and mock-mediated jobs are bounded, evidence-first, persisted, and displayed; hybrid remains unsupported. M1–M4 regressions remain verified. The optional real-provider adapter and hosted Supabase migration remain unverified.
+**Current status:** M7 is implemented and locally verified as a controlled deterministic-mock simulation study. The prospective protocol and independently labeled corpus are frozen; 45 final C1/C2/C3 runs and their raw/scored artifacts are preserved with hashes. Results are descriptive and eligibility-adjusted. M1–M6 regressions remain verified. The optional real provider and hosted Supabase deployment remain unverified.
 
-**Next action:** Review M5 and update `DATABASE_URL` to a reachable Supabase connection/pooler endpoint. Do not begin **M6 — Hybrid correlation** without explicit approval.
+**Next action:** Review M7 and its research-validity limitations. Do not begin **M8 — Final documentation and deployment** without explicit approval.
 
 ---
 

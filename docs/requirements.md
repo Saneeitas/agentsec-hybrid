@@ -88,3 +88,34 @@ The roadmap's bounded model-assisted testing gate is expanded by the approved M5
 | M5-07 | Security | Closed targets/scenarios, strict validation, redaction, no arbitrary I/O/code/tool execution, and explicit unsupported configurations | Verified |
 | M5-08 | Verification and scope | Mock workflows and regressions pass without paid access; no M6/M7 functionality | Verified |
 
+## Milestone M6 — Hybrid Vulnerability Correlation and Reporting
+
+The roadmap's concise correlation milestone is expanded by the approved specification without beginning comparative evaluation.
+
+| ID | Requirement | Acceptance criteria | Status |
+|---|---|---|---|
+| M6-01 | Hybrid orchestration | Exact authorized target mapping executes deterministic then adaptive components under existing lifecycle controls | Verified |
+| M6-02 | Explicit correlation | Versioned rule/probe mappings produce deterministic corroborated, configuration-only, behavior-only, mitigating, inconclusive, or uncorrelated outcomes | Verified |
+| M6-03 | Provenance and deduplication | Stable unique findings retain original references, sanitized evidence, rationale, limitations, and source methods | Verified |
+| M6-04 | Explainable prioritization | Severity remains distinct from evidence strength and follows documented non-probabilistic rules | Verified |
+| M6-05 | Partial results | Component failure/timeouts preserve safe evidence but cannot complete the job successfully | Verified |
+| M6-06 | Persistence and reporting | Versioned migration stores component status, correlations, unified findings, and dashboard report data | Verified |
+| M6-07 | Research integrity | No held-out labels, text-similarity inference, M7 metrics, or effectiveness claims influence correlation | Verified |
+| M6-08 | Verification | Correlation, lifecycle, persistence, UI, regression, and container workflows pass | Verified |
+
+## Milestone M7 — Experimental Evaluation and Comparative Analysis
+
+The roadmap's comparative C1/C2/C3 milestone is implemented as a controlled simulation study. It does not begin final deployment/handover or claim real-model effectiveness.
+
+| ID | Requirement | Acceptance criteria | Status |
+|---|---|---|---|
+| M7-01 | Prospective protocol | Versioned questions, non-directional hypotheses, conditions, inclusion, matching, metrics, repetition/order, failure handling, analysis, and validity threats are frozen before final execution | Verified |
+| M7-02 | Independent corpus | Frozen held-out case manifest covers secure, shared, configuration-only/mitigated, behavior-only, inconclusive, and multiple-weakness evidence with manually derived labels | Verified |
+| M7-03 | Ground-truth isolation | Engines receive only closed mapping references; labels enter only after raw execution | Verified |
+| M7-04 | Reproducible harness | Existing C1/C2/C3 engines run with stable IDs, rotating order, bounded mock settings, versions, duration, tokens, findings, and failures recorded | Verified |
+| M7-05 | Correct scoring | Explicit rule/probe matching, duplicate suppression, eligibility, inconclusive/failure separation, and TP/FP/TN/FN calculations are tested | Verified |
+| M7-06 | Comparative metrics | Precision, recall, FPR, F1, completion, reproducibility, evidence coverage, duration, token/cost, and undefined denominators are represented correctly | Verified |
+| M7-07 | Research artifacts | Protocol, corpus/hash manifest, raw/scored JSON, CSV metrics, run manifest, failure/exclusion log, summary, and validity report are preserved | Verified |
+| M7-08 | Research integrity | Pilot is separate, amendments are documented, no held-out tuning occurs, and mock results are not represented as real-model or production evidence | Verified |
+| M7-09 | Verification and scope | Evaluation tests plus M1–M6 regressions, lint, type checks, builds, audit, PostgreSQL, and container workflows pass; M8 is not started | Verified |
+

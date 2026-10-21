@@ -1,4 +1,4 @@
-import type { AdaptiveAssessmentMode, AdaptiveFinding, AdaptiveScanResult, DeterministicFinding, DeterministicScanResult, LaboratoryTarget, MockBehavior, MockScanResult, RuleEvaluation, ScanJob, ScanMode, ScanStatus } from "@asf/contracts";
+import type { AdaptiveAssessmentMode, AdaptiveFinding, AdaptiveScanResult, DeterministicFinding, DeterministicScanResult, HybridScanResult, HybridUnifiedFinding, LaboratoryTarget, MockBehavior, MockScanResult, RuleEvaluation, ScanJob, ScanMode, ScanStatus } from "@asf/contracts";
 import type { Sql } from "postgres";
 
 type Timestamp = Date | string;
@@ -9,6 +9,8 @@ type DeterministicResultRow = { job_id: string; contract_version: "v1"; scanner_
 type FindingRow = { finding_id: string; fingerprint: string; rule_id: string; rule_version: string; category: string; severity: DeterministicFinding["severity"]; target_ref: string; affected_resource: string; rationale: string; evidence: Record<string, unknown>; remediation: string; observed_at: Timestamp };
 type AdaptiveResultRow = { job_id: string; contract_version: "adaptive-result/v1"; assessment_mode: AdaptiveAssessmentMode; engine_version: string; provider: Record<string, unknown> | null; summary: string; overall_classification: AdaptiveScanResult["overallClassification"]; probes: Array<Record<string, unknown>>; budgets: AdaptiveScanResult["budgets"] };
 type AdaptiveFindingRow = { finding_id: string; fingerprint: string; assessment_mode: AdaptiveAssessmentMode; probe_id: string; scenario_id: string; security_objective: string; severity: AdaptiveFinding["severity"]; confidence: "confirmed"; confidence_rationale: string; observed_behavior: string; evidence: Array<Record<string, unknown>>; remediation: string; provider: Record<string, unknown>; observed_at: Timestamp };
+type HybridReportRow = { job_id: string; contract_version: "hybrid-report/v1"; outcome: "completed" | "partial"; overall_status: "completed" | "partial_failure"; summary: string; target_mapping_version: string; correlation_version: string; mapping_version: string; component_status: HybridScanResult["componentStatus"]; component_errors: Record<string, string | null>; deterministic_result: DeterministicScanResult | null; adaptive_result: AdaptiveScanResult | null; counts: HybridScanResult["counts"]; generated_at: Timestamp };
+type HybridRow = { correlation_id: string; fingerprint: string; outcome: HybridUnifiedFinding["outcome"]; correlation_rule: string; correlation_version: string; rationale: string; provenance: { sourceMethods: HybridUnifiedFinding["sourceMethods"]; deterministicFindingRefs: string[]; adaptiveFindingRefs: string[]; adaptiveProbeRefs: string[] }; limitations: string[]; category: string; severity: HybridUnifiedFinding["severity"]; evidence_strength: string; affected_components: string[]; observed_outcomes: string[]; remediation: string };
 
 const iso = (value: Timestamp) => new Date(value).toISOString();
 function target(row: TargetRow): LaboratoryTarget {
@@ -43,6 +45,11 @@ export class Store {
   async listJobs(): Promise<ScanJob[]> { const rows = await this.sql<JobRow[]>`SELECT * FROM scan_jobs ORDER BY created_at DESC LIMIT 100`; return Promise.all(rows.map((row) => this.withResult(row))); }
   async getJob(id: string): Promise<ScanJob | null> { const [row] = await this.sql<JobRow[]>`SELECT * FROM scan_jobs WHERE id=${id}`; return row ? this.withResult(row) : null; }
   private async withResult(row: JobRow): Promise<ScanJob> {
+    const [hybrid] = await this.sql<HybridReportRow[]>`SELECT * FROM hybrid_scan_reports WHERE job_id=${row.id}`;
+    if (hybrid) {
+      const findings = await this.sql<HybridRow[]>`SELECT c.correlation_id, c.fingerprint, c.outcome, c.correlation_rule, c.correlation_version, c.rationale, c.provenance, c.limitations, f.category, f.severity, f.evidence_strength, f.affected_components, f.observed_outcomes, f.remediation FROM hybrid_correlations c JOIN hybrid_unified_findings f ON f.job_id=c.job_id AND f.correlation_id=c.correlation_id WHERE c.job_id=${row.id} ORDER BY c.outcome, f.category, c.fingerprint`;
+      return job(row, { contractVersion: hybrid.contract_version, jobId: hybrid.job_id, outcome: hybrid.outcome, overallStatus: hybrid.overall_status, summary: hybrid.summary, targetMappingVersion: hybrid.target_mapping_version, correlationVersion: hybrid.correlation_version, mappingVersion: hybrid.mapping_version, componentStatus: hybrid.component_status, componentErrors: hybrid.component_errors, deterministicResult: hybrid.deterministic_result, adaptiveResult: hybrid.adaptive_result, counts: hybrid.counts, generatedAt: iso(hybrid.generated_at), unifiedFindings: findings.map((item) => ({ correlationId: item.correlation_id, fingerprint: item.fingerprint, outcome: item.outcome, correlationRule: item.correlation_rule, correlationVersion: item.correlation_version, rationale: item.rationale, limitations: item.limitations, category: item.category, severity: item.severity, evidenceStrength: item.evidence_strength, affectedComponents: item.affected_components, observedOutcomes: item.observed_outcomes, remediation: item.remediation, sourceMethods: item.provenance.sourceMethods, deterministicFindingRefs: item.provenance.deterministicFindingRefs, adaptiveFindingRefs: item.provenance.adaptiveFindingRefs, adaptiveProbeRefs: item.provenance.adaptiveProbeRefs })) });
+    }
     const [adaptive] = await this.sql<AdaptiveResultRow[]>`SELECT job_id, contract_version, assessment_mode, engine_version, provider, summary, overall_classification, probes, budgets FROM adaptive_scan_results WHERE job_id=${row.id}`;
     if (adaptive) {
       const findings = await this.sql<AdaptiveFindingRow[]>`SELECT finding_id, fingerprint, assessment_mode, probe_id, scenario_id, security_objective, severity, confidence, confidence_rationale, observed_behavior, evidence, remediation, provider, observed_at FROM adaptive_findings WHERE job_id=${row.id} ORDER BY probe_id`;
@@ -110,6 +117,25 @@ export class Store {
       for (const finding of result.findings) await tx`INSERT INTO adaptive_findings (job_id, finding_id, fingerprint, assessment_mode, probe_id, scenario_id, security_objective, severity, confidence, confidence_rationale, observed_behavior, evidence, remediation, provider, observed_at) VALUES (${id}, ${finding.findingId}, ${finding.fingerprint}, ${finding.assessmentMode}, ${finding.probeId}, ${finding.scenarioId}, ${finding.securityObjective}, ${finding.severity}, ${finding.confidence}, ${finding.confidenceRationale}, ${finding.observedBehavior}, ${JSON.stringify(finding.evidence)}::jsonb, ${finding.remediation}, ${JSON.stringify(finding.provider)}::jsonb, ${finding.observedAt})`;
       await tx`UPDATE scan_jobs SET status='completed', completed_at=now(), lease_owner=NULL, lease_expires_at=NULL, error_code=NULL, updated_at=now() WHERE id=${id}`;
       await tx`INSERT INTO scan_job_transitions (job_id, from_status, to_status, reason) VALUES (${id}, 'running', 'completed', 'adaptive_result_persisted')`;
+      return true;
+    });
+  }
+  async completeHybridJob(id: string, owner: string, result: HybridScanResult): Promise<boolean> {
+    if (result.unifiedFindings.length > 200) throw new Error("scanner_result_limit");
+    return this.sql.begin(async (tx) => {
+      const [current] = await tx<JobRow[]>`SELECT * FROM scan_jobs WHERE id=${id} AND status='running' AND lease_owner=${owner} FOR UPDATE`;
+      if (!current) return false;
+      if (current.cancel_requested_at) { await tx`UPDATE scan_jobs SET status='cancelled', completed_at=now(), lease_owner=NULL, lease_expires_at=NULL, updated_at=now() WHERE id=${id}`; await tx`INSERT INTO scan_job_transitions (job_id, from_status, to_status, reason) VALUES (${id}, 'running', 'cancelled', 'cancelled_during_execution')`; return false; }
+      await tx`INSERT INTO hybrid_scan_reports (job_id, contract_version, outcome, overall_status, summary, target_mapping_version, correlation_version, mapping_version, component_status, component_errors, deterministic_result, adaptive_result, counts, generated_at) VALUES (${id}, ${result.contractVersion}, ${result.outcome}, ${result.overallStatus}, ${result.summary}, ${result.targetMappingVersion}, ${result.correlationVersion}, ${result.mappingVersion}, ${JSON.stringify(result.componentStatus)}::jsonb, ${JSON.stringify(result.componentErrors)}::jsonb, ${result.deterministicResult ? JSON.stringify(result.deterministicResult) : null}::jsonb, ${result.adaptiveResult ? JSON.stringify(result.adaptiveResult) : null}::jsonb, ${JSON.stringify(result.counts)}::jsonb, ${result.generatedAt ?? new Date().toISOString()})`;
+      for (const finding of result.unifiedFindings) {
+        const provenance = { sourceMethods: finding.sourceMethods, deterministicFindingRefs: finding.deterministicFindingRefs, adaptiveFindingRefs: finding.adaptiveFindingRefs, adaptiveProbeRefs: finding.adaptiveProbeRefs };
+        await tx`INSERT INTO hybrid_correlations (job_id, correlation_id, fingerprint, outcome, correlation_rule, correlation_version, rationale, provenance, limitations) VALUES (${id}, ${finding.correlationId}, ${finding.fingerprint}, ${finding.outcome}, ${finding.correlationRule}, ${finding.correlationVersion}, ${finding.rationale}, ${JSON.stringify(provenance)}::jsonb, ${JSON.stringify(finding.limitations)}::jsonb)`;
+        await tx`INSERT INTO hybrid_unified_findings (job_id, correlation_id, category, severity, evidence_strength, affected_components, observed_outcomes, remediation) VALUES (${id}, ${finding.correlationId}, ${finding.category}, ${finding.severity}, ${finding.evidenceStrength}, ${JSON.stringify(finding.affectedComponents)}::jsonb, ${JSON.stringify(finding.observedOutcomes)}::jsonb, ${finding.remediation})`;
+      }
+      const next = result.overallStatus === "completed" ? "completed" : "failed";
+      const errorCode = result.overallStatus === "completed" ? null : "hybrid_partial_failure";
+      await tx`UPDATE scan_jobs SET status=${next}, completed_at=now(), lease_owner=NULL, lease_expires_at=NULL, error_code=${errorCode}, updated_at=now() WHERE id=${id}`;
+      await tx`INSERT INTO scan_job_transitions (job_id, from_status, to_status, reason) VALUES (${id}, 'running', ${next}, ${result.overallStatus === "completed" ? "hybrid_report_persisted" : "hybrid_partial_report_persisted"})`;
       return true;
     });
   }

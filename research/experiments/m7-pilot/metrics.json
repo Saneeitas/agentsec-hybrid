@@ -1,0 +1,110 @@
+{
+  "C1": {
+    "assessmentCompletionRate": 1.0,
+    "caseLevelMetrics": {
+      "eligibleUnits": 31,
+      "evidenceCoverage": 1.0,
+      "f1Score": 1.0,
+      "falseNegatives": 0,
+      "falsePositiveRate": 0.0,
+      "falsePositives": 0,
+      "inconclusiveUnits": 8,
+      "ineligibleUnits": 1,
+      "precision": 1.0,
+      "recall": 1.0,
+      "trueNegatives": 15,
+      "truePositives": 16
+    },
+    "estimatedProviderCostUsd": 0.0,
+    "meanDurationMs": 2.172,
+    "reproducibilityNote": "Repeated mock-provider runs are deterministic checks, not independent stochastic observations.",
+    "reproducibleCaseFraction": 1.0,
+    "runLevelMetrics": {
+      "eligibleUnits": 31,
+      "evidenceCoverage": 1.0,
+      "f1Score": 1.0,
+      "falseNegatives": 0,
+      "falsePositiveRate": 0.0,
+      "falsePositives": 0,
+      "inconclusiveUnits": 8,
+      "ineligibleUnits": 1,
+      "precision": 1.0,
+      "recall": 1.0,
+      "trueNegatives": 15,
+      "truePositives": 16
+    },
+    "totalProviderTokens": 0
+  },
+  "C2": {
+    "assessmentCompletionRate": 1.0,
+    "caseLevelMetrics": {
+      "eligibleUnits": 6,
+      "evidenceCoverage": 1.0,
+      "f1Score": 1.0,
+      "falseNegatives": 0,
+      "falsePositiveRate": 0.0,
+      "falsePositives": 0,
+      "inconclusiveUnits": 8,
+      "ineligibleUnits": 26,
+      "precision": 1.0,
+      "recall": 1.0,
+      "trueNegatives": 4,
+      "truePositives": 2
+    },
+    "estimatedProviderCostUsd": 0.0,
+    "meanDurationMs": 0.998,
+    "reproducibilityNote": "Repeated mock-provider runs are deterministic checks, not independent stochastic observations.",
+    "reproducibleCaseFraction": 1.0,
+    "runLevelMetrics": {
+      "eligibleUnits": 6,
+      "evidenceCoverage": 1.0,
+      "f1Score": 1.0,
+      "falseNegatives": 0,
+      "falsePositiveRate": 0.0,
+      "falsePositives": 0,
+      "inconclusiveUnits": 8,
+      "ineligibleUnits": 26,
+      "precision": 1.0,
+      "recall": 1.0,
+      "trueNegatives": 4,
+      "truePositives": 2
+    },
+    "totalProviderTokens": 504
+  },
+  "C3": {
+    "assessmentCompletionRate": 1.0,
+    "caseLevelMetrics": {
+      "eligibleUnits": 32,
+      "evidenceCoverage": 1.0,
+      "f1Score": 1.0,
+      "falseNegatives": 0,
+      "falsePositiveRate": 0.0,
+      "falsePositives": 0,
+      "inconclusiveUnits": 8,
+      "ineligibleUnits": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "trueNegatives": 15,
+      "truePositives": 17
+    },
+    "estimatedProviderCostUsd": 0.0,
+    "meanDurationMs": 0.895,
+    "reproducibilityNote": "Repeated mock-provider runs are deterministic checks, not independent stochastic observations.",
+    "reproducibleCaseFraction": 1.0,
+    "runLevelMetrics": {
+      "eligibleUnits": 32,
+      "evidenceCoverage": 1.0,
+      "f1Score": 1.0,
+      "falseNegatives": 0,
+      "falsePositiveRate": 0.0,
+      "falsePositives": 0,
+      "inconclusiveUnits": 8,
+      "ineligibleUnits": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "trueNegatives": 15,
+      "truePositives": 17
+    },
+    "totalProviderTokens": 504
+  }
+}

@@ -212,3 +212,108 @@ The roadmap defines M5 as bounded model-assisted testing with observable evidenc
 
 Review M5. Do not begin M6 without explicit approval.
 
+## 2026-10-21 — M6 hybrid findings correlation
+
+### Scope reconciliation
+
+The roadmap defines M6 as normalization, validation, deduplication, severity handling, and traceable cross-scanner results. The approved specification adds explicit outcome classes, component/partial status, provenance persistence, and a unified dashboard report. These are compatible refinements of the same milestone. M6 does not use held-out labels, calculate comparative metrics, or begin M7.
+
+### Completed implementation
+
+- Enabled hybrid jobs through the existing authenticated PostgreSQL-leased lifecycle, with exact reviewed mappings for `lab://secure-agent` and `lab://vulnerable-agent` only.
+- Added a separate `correlation/1.0.0` engine and `det-adaptive-map/v1` mapping from DET-001–DET-008 to controlled adaptive probe objectives.
+- Added deterministic correlation outcomes for corroborated, configuration-only, behavior-only, contradictory/mitigating, inconclusive, and uncorrelated evidence.
+- Added stable SHA-256 correlation identifiers/fingerprints, deterministic ordering, and duplicate suppression without text similarity or severity-only matching.
+- Preserved original deterministic/adaptive results and source finding, probe, trace/outcome, method, rationale, remediation, limitation, engine, and mapping provenance.
+- Kept vulnerability severity separate from evidence strength; correlation agreement does not automatically escalate severity and no numeric confidence is invented.
+- Added partial-result semantics: required component/provider/correlation failures retain safe evidence in a partial report while the application job ends failed. Cancellation still wins before persistence.
+- Added `hybrid-report/v1`, Drizzle tables and migration `0004_hybrid_correlation`, atomic Fastify-owned persistence, API reconstruction, and dashboard reporting for component status, outcome counts, provenance, rationale, remediation, and limitations.
+- Added ADR-0007 and correlation mapping/outcome documentation. No held-out registry is accessed by hybrid execution.
+
+### Verification evidence
+
+- `.venv/bin/pytest services/scanner` — 53 passed; focused M6 coverage includes mapping validation, all correlation outcomes, deterministic fingerprints/order/deduplication, complete hybrid execution/redaction, partial provider failure, authentication, and unknown-target rejection. One upstream Starlette/AnyIO warning remains.
+- `.venv/bin/ruff check services/scanner` — passed.
+- `npm run typecheck` — passed for API, web, and contracts.
+- `npm test` — passed: 8 API unit tests and 5 dashboard tests; the PostgreSQL suite is opt-in.
+- Disposable PostgreSQL 16 migration plus `npm run test:integration --workspace=@asf/api` — 17 passed, including hybrid persistence/provenance, partial-report persistence, cancellation before persistence, transport retry exhaustion, and M1–M5 lifecycle regressions.
+- `npm run build` — passed for API and production dashboard.
+- `npm audit` — 0 known vulnerabilities.
+- Docker Compose configuration/build and all web/API/scanner health checks — passed.
+- Containerized vertical slice — registered `lab://vulnerable-agent`, created a hybrid simulator job, completed both components and correlation in one attempt, persisted eight unified findings, and returned one corroborated plus seven configuration-only results with source references intact.
+
+### Limitations and blockers
+
+- The deterministic-to-adaptive map is an explicit versioned engineering rule set, not empirical proof that hybrid scanning improves detection. Comparative validity remains M7 work.
+- Adaptive evidence uses the deterministic mock provider by default. No actual model-mediated provider execution was performed, so no real-model vulnerability is claimed.
+- Only two exact development fixture/scenario mappings are supported. Unknown or ambiguous hybrid targets fail closed.
+- A no-violation observation is limited mitigating evidence for the tested action and is not proof of security.
+- Migration `0004_hybrid_correlation` is verified on disposable PostgreSQL 16, not against the configured Supabase project; the previously configured hosted endpoint remains unverified from this machine.
+
+### Next action
+
+Review M6. Do not begin M7 comparative experiments without explicit approval.
+
+## 2026-10-21 — M7 experimental evaluation and comparative analysis
+
+### Scope reconciliation
+
+The roadmap's C1/C2/C3 experiment gate matches the approved M7 specification. The actual M4 held-out registry contained only one secure placeholder, so it was insufficient for comparison. M7 therefore adds a separate five-case/eight-objective evaluation corpus using closed combinations of reviewed manifests and laboratory variants. It does not alter detection rules or use labels inside scanner execution. M8 documentation/deployment work was not started.
+
+### Prospective protocol, pilot, and freeze
+
+- Authored `ASF-M7-PROTOCOL-001` before execution with non-directional hypotheses, case/objective unit of analysis, explicit eligibility, rule/probe matching, undefined-denominator handling, three repetitions, rotating condition order, failures, descriptive analysis, and validity threats.
+- Added independently reasoned labels for secure controls, shared weaknesses, configuration weaknesses with effective runtime controls, behavior-only weakness, incomplete evidence, and multiple weaknesses.
+- The `m7-pilot-001` pilot executed 15 runs with no failures or mapping/schema errors. No label, rule, correlation mapping, hypothesis, scoring rule, or eligibility decision changed after pilot results.
+- Froze corpus version 1.0.0. Harness 1.0.1 added export-only metadata fields before final execution; the amendment is recorded in the protocol.
+- Final manifest records corpus SHA-256 `fd914d995c090140d88dcf4e8b5119f55402eda216953526c8309901096f177d` and protocol SHA-256 `a1344722eb8e08ba56e5ac8b58145527982d2f5a6fce6449c9867ca7bc01bdf8`.
+
+### Completed implementation
+
+- Added strict corpus models and validation, closed scanner-input projection, stable UUIDv5 run IDs, rotating condition order, bounded existing-engine adapters, and continued execution after retained failures.
+- Added independent post-execution scoring with explicit rule/probe mappings, C3 source-provenance checks, duplicate suppression, eligibility and inconclusive classifications, and TP/FP/TN/FN metrics.
+- Added precision, recall, false-positive rate, F1, evidence coverage, completion, duration, token/cost, and detected-set reproducibility calculations with JSON `null` for undefined ratios.
+- Added stable JSON/CSV export plus corpus/run manifests, hashes, raw results, scored results, metrics, failure/exclusion log, summary, and validity report.
+- Added ADR-0008 and research methodology/run instructions. Evaluation remains file-based and does not introduce scanner database access.
+
+### Final controlled-simulation results
+
+Study `m7-final-001` executed 45 runs: five cases × three conditions × three repetitions. All runs completed. There were no execution failures, timeouts, cancellations, or unsupported outcomes. The exclusion log retains 81 ineligible and 72 inconclusive repeated units.
+
+Case-level eligibility-adjusted results were:
+
+| Condition | Eligible | TP | FP | TN | FN | Precision | Recall | FPR | F1 | Evidence coverage |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| C1 deterministic | 31 | 16 | 0 | 15 | 0 | 1.0 | 1.0 | 0.0 | 1.0 | 1.0 |
+| C2 adaptive mock | 6 | 2 | 0 | 4 | 0 | 1.0 | 1.0 | 0.0 | 1.0 | 1.0 |
+| C3 hybrid | 32 | 17 | 0 | 15 | 0 | 1.0 | 1.0 | 0.0 | 1.0 | 1.0 |
+
+Completion and detected-set reproducibility were 1.0 for all conditions. Mean local durations were 0.406 ms (C1), 0.465 ms (C2), and 0.852 ms (C3). C2 and C3 each recorded 1,512 mock provider tokens; estimated provider cost was USD 0. No significance test or confidence interval was calculated because the small purposive corpus and deterministic repetitions do not provide independent statistical observations.
+
+These perfect fixture results do not establish general effectiveness. C2's denominator is much smaller, timing is local interpreter overhead, and the exact corpus is closely aligned with explicit rules and scenarios. The results support harness correctness and controlled coverage only; they do not prove C3 superiority, real-model susceptibility, production performance, or CTRL F2 system security.
+
+### Verification evidence
+
+- `.venv/bin/pytest services/scanner` — 61 passed, including 8 M7 tests for schema validation, label isolation, matching/deduplication, undefined metrics, failures, freeze enforcement, repetition tracking, hashing, stable exports, and reproducibility. One upstream Starlette/AnyIO warning remains.
+- `.venv/bin/ruff check services/scanner research/evaluation` — passed.
+- `npm run typecheck` — passed for API, web, and contracts.
+- `npm test` — passed: 8 API unit tests and 5 dashboard tests; database tests are opt-in.
+- Disposable PostgreSQL 16 migrations plus API integration suite — 17 passed, covering M2–M6 persistence and lifecycle regressions.
+- `npm run build` — passed for API and production dashboard.
+- `npm audit` — 0 known vulnerabilities.
+- Docker Compose configuration and image builds passed; web/API/scanner reached healthy state.
+- Containerized M6 regression completed a hybrid scan in one attempt with both components and correlation completed, one corroborated and seven configuration-only findings.
+- `git diff --check` — passed.
+
+### Limitations and blockers
+
+- This is a controlled deterministic-mock simulation, not a real-model evaluation. Repetitions check technical repeatability and are not independent stochastic observations.
+- The five-case purposive corpus is too small and tightly aligned with implemented rules for population inference or causal claims.
+- C1, C2, and C3 have different eligible denominators; headline rates must not be compared without coverage counts.
+- Final raw artifacts contain synthetic traces only. No production, customer, or CTRL F2 target was assessed.
+- Supabase connectivity/migrations remain unverified; M7 used files and disposable local PostgreSQL only for application regressions.
+
+### Next action
+
+Review M7 protocol, corpus, scoring, artifacts, and limitations. Do not begin M8 without explicit approval.
+

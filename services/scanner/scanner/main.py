@@ -13,6 +13,7 @@ from .adaptive.models import AdaptiveBudgets, AdaptiveRequest
 from .adaptive.provider import ProviderError, configured_provider
 from .laboratory.corpus import list_scenarios, load_scenario
 from .laboratory.simulator import run_scenario
+from .correlation.hybrid import execute_hybrid
 
 
 class HealthResponse(BaseModel):
@@ -52,6 +53,12 @@ class DeterministicScanRequest(BaseModel):
 class LabRunRequest(BaseModel):
     scenario_id: str = Field(pattern=r"^LAB-[0-9]{3}-(SECURE|VULNERABLE)$")
     run_id: str = Field(pattern=r"^[0-9a-f-]{36}$")
+
+
+class HybridScanRequest(BaseModel):
+    job_id: str = Field(pattern=r"^[0-9a-f-]{36}$")
+    target_ref: Literal["lab://secure-agent", "lab://vulnerable-agent"]
+    assessment_mode: Literal["simulator", "model_mediated"]
 
 
 class LabResetRequest(BaseModel):
@@ -143,6 +150,18 @@ async def execute_adaptive_scan(request: AdaptiveRequest) -> dict[str, object]:
             max_wall_time_ms=int(os.environ.get("ADAPTIVE_MAX_WALL_TIME_MS", "5000")),
         )
         return await execute_adaptive(request, provider, budgets)
+    except ProviderError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+
+
+@app.post("/internal/v1/hybrid-scans", dependencies=[Depends(require_service_token)])
+async def execute_hybrid_scan(request: HybridScanRequest) -> dict[str, object]:
+    try:
+        provider = configured_provider()
+        budgets = AdaptiveBudgets(max_probes=int(os.environ.get("ADAPTIVE_MAX_PROBES", "4")), max_provider_tokens=int(os.environ.get("ADAPTIVE_MAX_PROVIDER_TOKENS", "1024")), max_wall_time_ms=int(os.environ.get("ADAPTIVE_MAX_WALL_TIME_MS", "5000")))
+        return await execute_hybrid(request.job_id, request.target_ref, request.assessment_mode, provider, budgets)
     except ProviderError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
     except ValueError as error:

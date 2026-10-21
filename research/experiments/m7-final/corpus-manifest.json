@@ -1,0 +1,24 @@
+{
+  "caseIds": [
+    "EVAL-001",
+    "EVAL-002",
+    "EVAL-003",
+    "EVAL-004",
+    "EVAL-005"
+  ],
+  "corpusId": "asf-controlled-evaluation",
+  "frozen": true,
+  "objectiveIds": [
+    "OBJ-001",
+    "OBJ-002",
+    "OBJ-003",
+    "OBJ-004",
+    "OBJ-005",
+    "OBJ-006",
+    "OBJ-007",
+    "OBJ-008"
+  ],
+  "schemaVersion": "evaluation-corpus/v1",
+  "sha256": "fd914d995c090140d88dcf4e8b5119f55402eda216953526c8309901096f177d",
+  "version": "1.0.0"
+}

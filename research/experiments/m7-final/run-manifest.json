@@ -1,0 +1,23 @@
+{
+  "contractVersion": "evaluation-results/v1",
+  "corpusSha256": "fd914d995c090140d88dcf4e8b5119f55402eda216953526c8309901096f177d",
+  "engines": {
+    "adaptive": "1.0.0",
+    "correlation": "1.0.0",
+    "deterministic": "1.0.0",
+    "mapping": "det-adaptive-map/v1"
+  },
+  "environment": {
+    "platform": "macOS-15.6.1-x86_64-i386-64bit-Mach-O",
+    "python": "3.13.3"
+  },
+  "executionCount": 45,
+  "harnessVersion": "1.0.1",
+  "phase": "final",
+  "protocolSha256": "a1344722eb8e08ba56e5ac8b58145527982d2f5a6fce6449c9867ca7bc01bdf8",
+  "rawResultsCanonicalSha256": "cfd59a00f117061b580c9979fa8873209f8d2ce9d89728d4491cc8adb808c109",
+  "repetitions": 3,
+  "scoredResultsCanonicalSha256": "52798965f5b27946bac13535fb88a533996c9ab8132870a3956e1219cfccb00f",
+  "studyId": "m7-final-001",
+  "studyType": "controlled_simulation_with_deterministic_mock_provider"
+}

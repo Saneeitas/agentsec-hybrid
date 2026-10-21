@@ -107,3 +107,46 @@ The deterministic rule engine and adaptive engine share neither decision logic n
 
 The API worker retains PostgreSQL leasing, timeout, retry, recovery, and cancellation-before-persistence semantics. `adaptive_scan_results` and `adaptive_findings` store application reporting records. Hybrid correlation across deterministic and adaptive records is intentionally absent until M6.
 
+## M6 hybrid assessment and correlation flow
+
+```text
+hybrid job → exact target mapping → deterministic engine
+                            │
+                            └────────→ adaptive engine → M4 gateway
+                                              │
+                     normalized source evidence
+                                              ▼
+                       explicit correlation map v1
+                                              ▼
+          unified findings + immutable source provenance
+                                              ▼
+                    Fastify-owned PostgreSQL persistence
+```
+
+Only `lab://secure-agent` and `lab://vulnerable-agent` have reviewed manifest/scenario mappings. The scanner executes the components in order and never infers a scenario from text, URLs, or held-out labels. Correlation uses the versioned DET rule-to-probe map documented with the scanner. Exact objective, mapping, outcome, and affected-resource evidence determine the relationship; shared severity alone cannot correlate findings.
+
+The result contract is `hybrid-report/v1`. Original deterministic and adaptive results remain embedded and are never overwritten. Correlation records retain source finding/probe references, source methods, observed outcomes, rationale, engine/mapping versions, remediation, and limitations. Fingerprints derive from normalized stable attributes, enabling deterministic ordering and duplicate suppression without depending on timestamps.
+
+Severity continues to describe the underlying weakness and is not automatically escalated when both methods agree. Correlation outcome describes evidence strength separately. A prevented tested action can produce contradictory/mitigating evidence; it does not negate the configuration weakness or prove general security.
+
+`hybrid_scan_reports`, `hybrid_correlations`, and `hybrid_unified_findings` are application-reporting tables owned by Fastify. A component error or provider timeout produces `partial_failure`, preserves safe completed evidence, and leaves the scan job failed. Cancellation wins before persistence, and retries replace neither completed records nor create duplicate findings because persistence is transactional and keyed by stable identifiers.
+
+## M7 evaluation boundary
+
+```text
+frozen corpus mappings ──► execution adapter ──► existing C1/C2/C3 engines
+       labels excluded                              │
+                                                    ▼
+                                              raw outputs
+                                                    │
+frozen labels ─────────────────────────────► independent scorer
+                                                    │
+                              scored rows, metrics, hashes, reports
+```
+
+The evaluation package is file-based and does not add a database dependency. Exact `lab://eval-*` mappings select reviewed manifest and scenario variants. Ground-truth labels are not imported by deterministic, adaptive, or correlation modules and are removed from execution inputs. The post-execution scorer matches stable rule IDs and probe types, and for C3 requires source references preserved by unified findings.
+
+The unit of analysis is a case/objective vulnerability instance. Ineligible, inconclusive, partial, failed, timed-out, cancelled, and unsupported outcomes remain distinct from true negatives. Stable UUIDv5 run IDs identify repetitions, while timestamps and trace UUIDs remain raw provenance and do not affect matching. JSON/CSV exports record corpus/protocol/result hashes, engine/provider versions, budgets, duration, findings, exclusions, and failures.
+
+This boundary prevents normal scanner logic from consulting evaluation labels, but it does not make the corpus statistically representative. The study is a controlled synthetic simulation using a deterministic mock provider; Supabase and real-model behavior are outside the verified boundary.
+

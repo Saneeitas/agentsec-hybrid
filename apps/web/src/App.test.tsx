@@ -23,3 +23,14 @@ it("distinguishes simulator adaptive evidence and inconclusive states", async ()
   expect(screen.getByText(/Evidence mode: Simulator-based/)).toBeInTheDocument();
   expect(screen.getByText("No evidence-backed violation finding was produced.")).toBeInTheDocument();
 });
+it("displays hybrid component status, correlation outcome, and provenance", async () => {
+  const target = { id: "10000000-0000-0000-0000-000000000000", name: "Hybrid fixture", fixtureRef: "lab://vulnerable-agent", description: null, authorizationConfirmed: true, createdAt: "2026-10-21T00:00:00Z", updatedAt: "2026-10-21T00:00:00Z" };
+  const finding = { correlationId: "cor-1", fingerprint: "abc", outcome: "corroborated_weakness", category: "tool_permissions", severity: "high", evidenceStrength: "corroborated", sourceMethods: ["deterministic", "adaptive"], deterministicFindingRefs: ["det-1"], adaptiveFindingRefs: ["ada-1"], adaptiveProbeRefs: ["AP-001"], affectedComponents: ["tool/shell"], rationale: "Mapped evidence corroborates", remediation: "Constrain access", limitations: ["Synthetic laboratory only."], correlationRule: "det-adaptive-map/v1", correlationVersion: "1.0.0", observedOutcomes: ["weakness_observed"] };
+  const result = { contractVersion: "hybrid-report/v1", jobId: "40000000-0000-0000-0000-000000000000", outcome: "completed", overallStatus: "completed", summary: "Hybrid complete", targetMappingVersion: "hybrid-target-map/v1", componentStatus: { deterministic: "completed", adaptive: "completed", correlation: "completed" }, componentErrors: {}, deterministicResult: null, adaptiveResult: null, correlationVersion: "1.0.0", mappingVersion: "det-adaptive-map/v1", unifiedFindings: [finding], counts: { totalUnique: 1, corroborated: 1, configurationOnly: 0, behaviorOnly: 0, mitigating: 0, inconclusive: 0, uncorrelated: 0 } };
+  const job = { id: result.jobId, targetId: target.id, mode: "hybrid", status: "completed", mockBehavior: "success", adaptiveAssessmentMode: "simulator", attempts: 1, maxAttempts: 3, errorCode: null, createdAt: "2026-10-21T00:00:00Z", updatedAt: "2026-10-21T00:00:01Z", startedAt: "2026-10-21T00:00:00Z", completedAt: "2026-10-21T00:00:01Z", cancelRequestedAt: null, result };
+  vi.stubGlobal("fetch", vi.fn((input: string | URL | Request) => Promise.resolve(new Response(JSON.stringify(String(input).endsWith("/targets") ? [target] : [job]), { status: 200 }))));
+  render(<App />); fireEvent.change(screen.getByLabelText("Operator token"), { target: { value: "x".repeat(32) } }); fireEvent.click(screen.getByText("Open dashboard"));
+  expect(await screen.findByText(/Overall: completed · Deterministic: completed/)).toBeInTheDocument();
+  expect(screen.getByText("corroborated_weakness · tool_permissions · high")).toBeInTheDocument();
+  expect(screen.getByText(/Original deterministic refs: det-1 · adaptive refs: ada-1/)).toBeInTheDocument();
+});
