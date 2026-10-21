@@ -37,6 +37,13 @@ export type MockScanResult = {
   observations: Array<{ type: "mock_observation"; message: string }>;
 };
 
+export type RuleOutcome = "passed" | "failed" | "not_applicable" | "unknown";
+export type FindingSeverity = "low" | "medium" | "high" | "critical";
+export type RuleEvaluation = { ruleId: string; ruleVersion: string; category: string; description: string; outcome: RuleOutcome; affectedResource: string; rationale: string };
+export type DeterministicFinding = { findingId: string; fingerprint: string; ruleId: string; ruleVersion: string; category: string; severity: FindingSeverity; targetRef: string; affectedResource: string; rationale: string; evidence: Record<string, unknown>; remediation: string; scanId: string; observedAt: string };
+export type DeterministicScanResult = { contractVersion: "v1"; jobId: string; outcome: "completed"; summary: string; scannerVersion: string; engineVersion: string; manifestSchemaVersion: "agent-deployment/v1"; fixtureVersion: string; evaluations: RuleEvaluation[]; findings: DeterministicFinding[]; counts: { evaluated: number; passed: number; failed: number; notApplicable: number; unknown: number } };
+export type ScanResult = MockScanResult | DeterministicScanResult;
+
 export type ScanJob = {
   id: string;
   targetId: string;
@@ -51,6 +58,6 @@ export type ScanJob = {
   startedAt: string | null;
   completedAt: string | null;
   cancelRequestedAt: string | null;
-  result: MockScanResult | null;
+  result: ScanResult | null;
 };
 

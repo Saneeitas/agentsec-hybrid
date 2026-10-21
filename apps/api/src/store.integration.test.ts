@@ -12,12 +12,12 @@ suite("PostgreSQL scan orchestration", () => {
   const database = createDatabase({ databaseUrl: url!, databaseSsl: false });
   const store = new Store(database.client);
   beforeAll(async () => { await database.client`SELECT 1`; });
-  beforeEach(async () => { await database.client`TRUNCATE mock_scan_results, scan_job_transitions, scan_jobs, assessment_targets RESTART IDENTITY CASCADE`; });
+  beforeEach(async () => { await database.client`TRUNCATE deterministic_findings, deterministic_scan_results, mock_scan_results, scan_job_transitions, scan_jobs, assessment_targets RESTART IDENTITY CASCADE`; });
   afterAll(async () => { await database.close(); });
 
   async function targetAndJob(behavior: "success" | "failure" | "timeout" = "success") {
     const target = await store.createTarget({ name: "Lab agent", fixtureRef: `lab://agent-${crypto.randomUUID().slice(0, 8)}` });
-    const job = await store.createJob({ targetId: target.id, mode: "hybrid", mockBehavior: behavior, maxAttempts: 3 });
+    const job = await store.createJob({ targetId: target.id, mode: "deterministic", mockBehavior: behavior, maxAttempts: 3 });
     return job!;
   }
 
@@ -48,13 +48,15 @@ suite("PostgreSQL scan orchestration", () => {
     expect(claims.filter(Boolean)).toHaveLength(1);
   });
 
-  it("persists a structured mock result", async () => {
+  it("persists structured evaluations and findings", async () => {
     const created = await targetAndJob();
-    const response = new Response(JSON.stringify({ contractVersion: "v1", jobId: created.id, outcome: "completed", summary: "Mock complete", scannerVersion: "test", observations: [{ type: "mock_observation", message: "Synthetic" }] }), { status: 200 });
+    const response = new Response(JSON.stringify({ contractVersion: "v1", jobId: created.id, outcome: "completed", summary: "Deterministic complete", scannerVersion: "test", engineVersion: "1.0.0", manifestSchemaVersion: "agent-deployment/v1", fixtureVersion: "1.0.0", counts: { evaluated: 1, passed: 0, failed: 1, notApplicable: 0, unknown: 0 }, evaluations: [{ ruleId: "DET-001", ruleVersion: "1.0.0", category: "tool_permissions", description: "Wildcard", outcome: "failed", affectedResource: "tool/shell", rationale: "Wildcard present" }], findings: [{ findingId: "det-123", fingerprint: "abc", ruleId: "DET-001", ruleVersion: "1.0.0", category: "tool_permissions", severity: "high", targetRef: "lab://fixture", affectedResource: "tool/shell", rationale: "Wildcard present", evidence: { operations: ["*"] }, remediation: "Constrain operations", scanId: created.id, observedAt: "2026-10-21T00:00:00.000Z" }] }), { status: 200 });
     const worker = new ScanWorker(store, testConfig, vi.fn().mockResolvedValue(response));
     expect(await worker.runOnce()).toBe(true);
     const completed = await store.getJob(created.id);
-    expect(completed).toMatchObject({ status: "completed", errorCode: null }); expect(completed?.result?.summary).toBe("Mock complete");
+    expect(completed).toMatchObject({ status: "completed", errorCode: null });
+    expect(completed?.result?.summary).toBe("Deterministic complete");
+    expect(completed?.result && "findings" in completed.result ? completed.result.findings : []).toHaveLength(1);
   });
 
   it("cancels queued jobs safely", async () => {
@@ -95,5 +97,14 @@ suite("PostgreSQL scan orchestration", () => {
     await new Promise((resolve) => setTimeout(resolve, 30));
     const recovered = await store.claimJob("recovery-worker", 1000);
     expect(recovered).toMatchObject({ id: created.id, status: "running", attempts: 2 });
+  });
+
+  it("fails unsupported modes without calling the scanner", async () => {
+    const target = await store.createTarget({ name: "Lab agent", fixtureRef: "lab://unsupported-mode" });
+    const created = (await store.createJob({ targetId: target.id, mode: "adaptive", mockBehavior: "success", maxAttempts: 3 }))!;
+    const request = vi.fn();
+    await new ScanWorker(store, testConfig, request).runOnce();
+    expect(request).not.toHaveBeenCalled();
+    expect(await store.getJob(created.id)).toMatchObject({ status: "failed", errorCode: "unsupported_scan_mode" });
   });
 });

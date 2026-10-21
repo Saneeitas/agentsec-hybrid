@@ -6,6 +6,9 @@ from typing import Literal
 from fastapi import Depends, FastAPI, Header, HTTPException
 from pydantic import BaseModel, Field
 
+from .deterministic.engine import build_result
+from .deterministic.registry import FixtureError, load_fixture
+
 
 class HealthResponse(BaseModel):
     service: Literal["scanner"]
@@ -33,6 +36,12 @@ class MockScanResponse(BaseModel):
     summary: str
     scannerVersion: str
     observations: list[MockObservation]
+
+
+class DeterministicScanRequest(BaseModel):
+    job_id: str = Field(pattern=r"^[0-9a-f-]{36}$")
+    fixture_ref: str = Field(pattern=r"^lab://[a-z0-9][a-z0-9-]{1,62}$", max_length=70)
+    mode: Literal["deterministic"]
 
 
 def require_service_token(authorization: str | None = Header(default=None)) -> None:
@@ -72,4 +81,16 @@ async def execute_mock_scan(request: MockScanRequest) -> MockScanResponse:
         scannerVersion="0.2.0-mock",
         observations=[MockObservation(type="mock_observation", message="Synthetic execution only")],
     )
+
+
+@app.post(
+    "/internal/v1/deterministic-scans",
+    dependencies=[Depends(require_service_token)],
+)
+async def execute_deterministic_scan(request: DeterministicScanRequest) -> dict[str, object]:
+    try:
+        manifest = load_fixture(request.fixture_ref)
+    except FixtureError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    return build_result(request.job_id, request.fixture_ref, manifest)
 

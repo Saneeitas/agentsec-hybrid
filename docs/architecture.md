@@ -58,6 +58,12 @@ Application tables (`assessment_targets`, `scan_jobs`, `scan_job_transitions`, a
 
 Target and scan APIs require an operator bearer token. The dashboard accepts it interactively and retains it only in memory. The scanner execution endpoint requires a distinct service token and is not published outside the Compose network. These tokens are a local-research control, not a multi-user identity system.
 
+## M3 deterministic assessment flow
+
+For a deterministic job, the worker sends the target's exact `lab://` identifier to the authenticated scanner. The scanner resolves it from a closed packaged registry, enforces a 64 KiB manifest limit, validates `agent-deployment/v1`, and applies ordered data-only predicates. Manifest content is never treated as code, expressions, paths, or network locations.
+
+The API bounds and atomically persists result metadata, evaluations, findings, and the completed transition. Cancellation observed before persistence wins. Adaptive and hybrid jobs terminate with `unsupported_scan_mode` in M3 without calling the scanner. These tables are application records; later held-out research evidence requires a separate corpus and storage boundary.
+
 ## Trust assumptions
 
 - Operators provide a correctly scoped Supabase role and rotate credentials outside the repository.

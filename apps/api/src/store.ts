@@ -1,17 +1,19 @@
-import type { LaboratoryTarget, MockBehavior, MockScanResult, ScanJob, ScanMode, ScanStatus } from "@asf/contracts";
+import type { DeterministicFinding, DeterministicScanResult, LaboratoryTarget, MockBehavior, MockScanResult, RuleEvaluation, ScanJob, ScanMode, ScanStatus } from "@asf/contracts";
 import type { Sql } from "postgres";
 
 type Timestamp = Date | string;
 type TargetRow = { id: string; name: string; fixture_ref: string; description: string | null; authorization_confirmed: boolean; created_at: Timestamp; updated_at: Timestamp };
 type JobRow = { id: string; target_id: string; mode: ScanMode; status: ScanStatus; mock_behavior: MockBehavior; attempts: number; max_attempts: number; error_code: string | null; created_at: Timestamp; updated_at: Timestamp; started_at: Timestamp | null; completed_at: Timestamp | null; cancel_requested_at: Timestamp | null };
 type ResultRow = { job_id: string; contract_version: "v1"; scanner_version: string; outcome: "completed"; summary: string; observations: MockScanResult["observations"] };
+type DeterministicResultRow = { job_id: string; contract_version: "v1"; scanner_version: string; engine_version: string; manifest_schema_version: "agent-deployment/v1"; fixture_version: string; summary: string; counts: DeterministicScanResult["counts"]; evaluations: RuleEvaluation[] };
+type FindingRow = { finding_id: string; fingerprint: string; rule_id: string; rule_version: string; category: string; severity: DeterministicFinding["severity"]; target_ref: string; affected_resource: string; rationale: string; evidence: Record<string, unknown>; remediation: string; observed_at: Timestamp };
 
 const iso = (value: Timestamp) => new Date(value).toISOString();
 function target(row: TargetRow): LaboratoryTarget {
   return { id: row.id, name: row.name, fixtureRef: row.fixture_ref, description: row.description, authorizationConfirmed: true, createdAt: iso(row.created_at), updatedAt: iso(row.updated_at) };
 }
-function job(row: JobRow, result: ResultRow | null = null): ScanJob {
-  return { id: row.id, targetId: row.target_id, mode: row.mode, status: row.status, mockBehavior: row.mock_behavior, attempts: row.attempts, maxAttempts: row.max_attempts, errorCode: row.error_code, createdAt: iso(row.created_at), updatedAt: iso(row.updated_at), startedAt: row.started_at ? iso(row.started_at) : null, completedAt: row.completed_at ? iso(row.completed_at) : null, cancelRequestedAt: row.cancel_requested_at ? iso(row.cancel_requested_at) : null, result: result ? { contractVersion: result.contract_version, jobId: result.job_id, outcome: result.outcome, summary: result.summary, scannerVersion: result.scanner_version, observations: result.observations } : null };
+function job(row: JobRow, result: ScanJob["result"] = null): ScanJob {
+  return { id: row.id, targetId: row.target_id, mode: row.mode, status: row.status, mockBehavior: row.mock_behavior, attempts: row.attempts, maxAttempts: row.max_attempts, errorCode: row.error_code, createdAt: iso(row.created_at), updatedAt: iso(row.updated_at), startedAt: row.started_at ? iso(row.started_at) : null, completedAt: row.completed_at ? iso(row.completed_at) : null, cancelRequestedAt: row.cancel_requested_at ? iso(row.cancel_requested_at) : null, result };
 }
 
 export class Store {
@@ -38,7 +40,15 @@ export class Store {
   }
   async listJobs(): Promise<ScanJob[]> { const rows = await this.sql<JobRow[]>`SELECT * FROM scan_jobs ORDER BY created_at DESC LIMIT 100`; return Promise.all(rows.map((row) => this.withResult(row))); }
   async getJob(id: string): Promise<ScanJob | null> { const [row] = await this.sql<JobRow[]>`SELECT * FROM scan_jobs WHERE id=${id}`; return row ? this.withResult(row) : null; }
-  private async withResult(row: JobRow): Promise<ScanJob> { const [result] = await this.sql<ResultRow[]>`SELECT job_id, contract_version, scanner_version, outcome, summary, observations FROM mock_scan_results WHERE job_id=${row.id}`; return job(row, result ?? null); }
+  private async withResult(row: JobRow): Promise<ScanJob> {
+    const [deterministic] = await this.sql<DeterministicResultRow[]>`SELECT job_id, contract_version, scanner_version, engine_version, manifest_schema_version, fixture_version, summary, counts, evaluations FROM deterministic_scan_results WHERE job_id=${row.id}`;
+    if (deterministic) {
+      const findings = await this.sql<FindingRow[]>`SELECT finding_id, fingerprint, rule_id, rule_version, category, severity, target_ref, affected_resource, rationale, evidence, remediation, observed_at FROM deterministic_findings WHERE job_id=${row.id} ORDER BY rule_id, affected_resource`;
+      return job(row, { contractVersion: deterministic.contract_version, jobId: deterministic.job_id, outcome: "completed", summary: deterministic.summary, scannerVersion: deterministic.scanner_version, engineVersion: deterministic.engine_version, manifestSchemaVersion: deterministic.manifest_schema_version, fixtureVersion: deterministic.fixture_version, counts: deterministic.counts, evaluations: deterministic.evaluations, findings: findings.map((item) => ({ findingId: item.finding_id, fingerprint: item.fingerprint, ruleId: item.rule_id, ruleVersion: item.rule_version, category: item.category, severity: item.severity, targetRef: item.target_ref, affectedResource: item.affected_resource, rationale: item.rationale, evidence: item.evidence, remediation: item.remediation, scanId: row.id, observedAt: iso(item.observed_at) })) });
+    }
+    const [result] = await this.sql<ResultRow[]>`SELECT job_id, contract_version, scanner_version, outcome, summary, observations FROM mock_scan_results WHERE job_id=${row.id}`;
+    return job(row, result ? { contractVersion: result.contract_version, jobId: result.job_id, outcome: result.outcome, summary: result.summary, scannerVersion: result.scanner_version, observations: result.observations } : null);
+  }
   async cancelJob(id: string): Promise<ScanJob | null> {
     return this.sql.begin(async (tx) => {
       const [current] = await tx<JobRow[]>`SELECT * FROM scan_jobs WHERE id=${id} FOR UPDATE`;
@@ -68,6 +78,28 @@ export class Store {
       await tx`UPDATE scan_jobs SET status='completed', completed_at=now(), lease_owner=NULL, lease_expires_at=NULL, error_code=NULL, updated_at=now() WHERE id=${id}`;
       await tx`INSERT INTO scan_job_transitions (job_id, from_status, to_status, reason) VALUES (${id}, 'running', 'completed', 'mock_result_persisted')`;
       return true;
+    });
+  }
+  async completeDeterministicJob(id: string, owner: string, result: DeterministicScanResult): Promise<boolean> {
+    if (result.findings.length > 100 || result.evaluations.length > 400) throw new Error("scanner_result_limit");
+    return this.sql.begin(async (tx) => {
+      const [current] = await tx<JobRow[]>`SELECT * FROM scan_jobs WHERE id=${id} AND status='running' AND lease_owner=${owner} FOR UPDATE`;
+      if (!current) return false;
+      if (current.cancel_requested_at) { await tx`UPDATE scan_jobs SET status='cancelled', completed_at=now(), lease_owner=NULL, lease_expires_at=NULL, updated_at=now() WHERE id=${id}`; await tx`INSERT INTO scan_job_transitions (job_id, from_status, to_status, reason) VALUES (${id}, 'running', 'cancelled', 'cancelled_during_execution')`; return false; }
+      await tx`INSERT INTO deterministic_scan_results (job_id, contract_version, scanner_version, engine_version, manifest_schema_version, fixture_version, summary, counts, evaluations) VALUES (${id}, ${result.contractVersion}, ${result.scannerVersion}, ${result.engineVersion}, ${result.manifestSchemaVersion}, ${result.fixtureVersion}, ${result.summary}, ${JSON.stringify(result.counts)}::jsonb, ${JSON.stringify(result.evaluations)}::jsonb)`;
+      for (const finding of result.findings) await tx`INSERT INTO deterministic_findings (job_id, finding_id, fingerprint, rule_id, rule_version, category, severity, target_ref, affected_resource, rationale, evidence, remediation, observed_at) VALUES (${id}, ${finding.findingId}, ${finding.fingerprint}, ${finding.ruleId}, ${finding.ruleVersion}, ${finding.category}, ${finding.severity}, ${finding.targetRef}, ${finding.affectedResource}, ${finding.rationale}, ${JSON.stringify(finding.evidence)}::jsonb, ${finding.remediation}, ${finding.observedAt})`;
+      await tx`UPDATE scan_jobs SET status='completed', completed_at=now(), lease_owner=NULL, lease_expires_at=NULL, error_code=NULL, updated_at=now() WHERE id=${id}`;
+      await tx`INSERT INTO scan_job_transitions (job_id, from_status, to_status, reason) VALUES (${id}, 'running', 'completed', 'deterministic_result_persisted')`;
+      return true;
+    });
+  }
+  async failJob(id: string, owner: string, errorCode: string): Promise<void> {
+    await this.sql.begin(async (tx) => {
+      const [current] = await tx<JobRow[]>`SELECT * FROM scan_jobs WHERE id=${id} AND status='running' AND lease_owner=${owner} FOR UPDATE`;
+      if (!current) return;
+      const next = current.cancel_requested_at ? "cancelled" : "failed";
+      await tx`UPDATE scan_jobs SET status=${next}, completed_at=now(), lease_owner=NULL, lease_expires_at=NULL, error_code=${errorCode}, updated_at=now() WHERE id=${id}`;
+      await tx`INSERT INTO scan_job_transitions (job_id, from_status, to_status, reason) VALUES (${id}, 'running', ${next}, ${errorCode})`;
     });
   }
   async failOrRetryJob(id: string, owner: string, errorCode: string, retryDelayMs: number): Promise<void> {

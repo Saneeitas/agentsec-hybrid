@@ -43,3 +43,19 @@ The repository originally defined M2 only as a vertical slice in which the API c
 - Hosted database migration verification requires an operator-provided Supabase `DATABASE_URL`; no credential is stored in this repository.
 - A future local integration database must be opt-in and must not be added to the default Compose configuration.
 
+## Milestone M3 — Deterministic Vulnerability Scanning
+
+The original roadmap summarized M3 as agent-specific rules, tests, and fixture classification. The approved M3 specification expands that same scope into the following verifiable requirements without introducing adaptive or hybrid execution.
+
+| ID | Requirement | Acceptance criteria | Status |
+|---|---|---|---|
+| M3-01 | Versioned deployment manifest | Strict `agent-deployment/v1` schema distinguishes known, unknown, and absent configuration | Verified |
+| M3-02 | Trusted fixture registry | Exact `lab://` identifiers resolve only from a versioned packaged registry; traversal, URLs, unknown fixtures, malformed manifests, and unsupported versions are rejected | Verified |
+| M3-03 | Deterministic rules | DET-001 through DET-008 return explicit pass, fail, not-applicable, or unknown outcomes and findings only when evidence is sufficient | Verified |
+| M3-04 | Safe reproducible findings | Findings include stable fingerprints, sanitized evidence, rationale, affected resources, severity, remediation, versions, scan ID, and timestamp | Verified |
+| M3-05 | Lifecycle integration | Deterministic jobs use existing persistence, leases, timeouts, retries, cancellation, and recovery; adaptive/hybrid jobs fail as unsupported | Verified |
+| M3-06 | Persistence | Versioned Drizzle migration stores deterministic result metadata, rule evaluations, and normalized findings separately from experimental evidence | Verified |
+| M3-07 | Dashboard reporting | Dashboard displays status, severity grouping, findings, remediation, and evaluation counts with error/unsupported states | Verified |
+| M3-08 | Verification | Rule, fixture, redaction, traversal, serialization, persistence, lifecycle, UI, build, audit, and Compose checks pass | Verified |
+| M3-09 | Scope boundary | No adaptive LLM testing, attack generation, hybrid correlation, production scanning, remediation, or external scanner integration | Verified |
+

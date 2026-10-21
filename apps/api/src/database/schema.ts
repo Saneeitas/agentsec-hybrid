@@ -61,3 +61,12 @@ export const mockScanResults = pgTable("mock_scan_results", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
 });
 
+export const deterministicScanResults = pgTable("deterministic_scan_results", {
+  id: uuid("id").defaultRandom().primaryKey(), jobId: uuid("job_id").notNull().references(() => scanJobs.id, { onDelete: "cascade" }).unique(),
+  contractVersion: text("contract_version").notNull(), scannerVersion: text("scanner_version").notNull(), engineVersion: text("engine_version").notNull(), manifestSchemaVersion: text("manifest_schema_version").notNull(), fixtureVersion: text("fixture_version").notNull(), summary: text("summary").notNull(), counts: jsonb("counts").notNull(), evaluations: jsonb("evaluations").notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+});
+
+export const deterministicFindings = pgTable("deterministic_findings", {
+  id: uuid("id").defaultRandom().primaryKey(), jobId: uuid("job_id").notNull().references(() => scanJobs.id, { onDelete: "cascade" }), findingId: text("finding_id").notNull(), fingerprint: text("fingerprint").notNull(), ruleId: text("rule_id").notNull(), ruleVersion: text("rule_version").notNull(), category: text("category").notNull(), severity: text("severity").notNull(), targetRef: text("target_ref").notNull(), affectedResource: text("affected_resource").notNull(), rationale: text("rationale").notNull(), evidence: jsonb("evidence").notNull(), remediation: text("remediation").notNull(), observedAt: timestamp("observed_at", { withTimezone: true }).notNull(), createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+}, (table) => [uniqueIndex("deterministic_findings_job_finding_unique").on(table.jobId, table.findingId)]);
+

@@ -1,7 +1,7 @@
 # Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents
 
 > **Research title:** A Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents using CTRL F2  
-> **Status:** M2 scan job management and orchestration implemented and verified locally; awaiting review
+> **Status:** M3 deterministic vulnerability scanning implemented and verified locally; awaiting review
 > **Organization:** CTRL F2 (proposed case-study environment; access and scope require explicit authorization)  
 > **Document role:** Living project overview and progress index. The repository's requirements, architecture, decisions, and experiments provide the detailed source of truth.
 You are the lead software engineer responsible for implementing my Master's cybersecurity capstone project.
@@ -14,7 +14,7 @@ The project is titled:
 
 We are implementing a hybrid cybersecurity assessment platform combining deterministic vulnerability scanning and non-deterministic adaptive security testing.
 
-**Current milestone: M2 — Scan Job Management and Orchestration (complete; awaiting review).**
+**Current milestone: M3 — Deterministic Vulnerability Scanning.**
 
 The M1 monorepo includes:
 
@@ -42,7 +42,7 @@ Create the initial architecture, requirements and progress documentation specifi
 7. Do not mark requirements complete unless they have been implemented and verified.
 8. Do not proceed beyond Milestone M1 without my approval.
 
-Milestone M1 is complete and M2 is approved. Do not proceed beyond M2 without approval.
+Milestones M1 and M2 are complete and M3 is approved. Do not proceed to M4 without explicit approval.
 ## 1. Overview
 
 This master's cybersecurity capstone develops and evaluates a **hybrid vulnerability assessment framework** for autonomous AI agent deployments. It combines:
@@ -205,6 +205,25 @@ Set distinct high-entropy `API_AUTH_TOKEN` and `SCANNER_SERVICE_TOKEN` values in
 
 M2 accepts only confirmed synthetic fixtures with identifiers matching `lab://...`; it never fetches a target URL. Authenticated users can register/update fixtures and create/list/get/cancel deterministic, adaptive, or hybrid mock jobs. PostgreSQL-backed workers atomically lease queued work, retry bounded failures/timeouts, recover expired leases, and persist structured mock results. No vulnerability assessment is performed.
 
+### M3 deterministic scanning
+
+Successful deterministic jobs now run a data-only rule engine. Register `lab://secure-agent`, `lab://vulnerable-agent`, or `lab://incomplete-agent`. Unknown, malformed, traversal-like, or unsupported-version fixtures fail closed. Adaptive and hybrid jobs terminate with `unsupported_scan_mode` and never report a false successful assessment.
+
+The `agent-deployment/v1` manifest covers identity/capabilities, tools, operations, authorization/approval, resource scopes, credential references/redaction, network controls, and deployment controls. Missing or unknown values remain insufficient evidence.
+
+| Rule | Deterministic condition |
+|---|---|
+| DET-001 | Explicit wildcard tool operations |
+| DET-002 | Explicitly absent tool authorization |
+| DET-003 | High-risk operations explicitly lack approval |
+| DET-004 | Explicit wildcard resource scope |
+| DET-005 | Credential material explicitly stored inline |
+| DET-006 | Credential log redaction explicitly disabled |
+| DET-007 | Public service explicitly lacks authentication |
+| DET-008 | Deployment sandboxing explicitly disabled |
+
+Evaluations are `passed`, `failed`, `not_applicable`, or `unknown`; only failures generate findings. Stable fingerprints use sanitized rule, target, resource, and evidence attributes. Findings represent configuration weaknesses, not demonstrated runtime exploits.
+
 ## 5. Key functional requirements
 
 | ID | Requirement | MVP priority |
@@ -294,7 +313,7 @@ Run adaptive tests repeatedly and report variability. A detection is **confirmed
 | M0 — Baseline | README, requirements draft, architecture and decisions | Scope and assumptions documented | Complete |
 | M1 — Bootstrap | Monorepo, Compose, web/API/scanner/Supabase integration skeleton | All services start; health checks pass | Complete |
 | M2 — Scan orchestration vertical slice | Constrained target registry, durable scan lifecycle, mock scanner dispatch, persisted results, dashboard | End-to-end lifecycle plus cancellation, retry, leasing, and recovery tests pass | **Complete — awaiting review** |
-| M3 — Deterministic | Agent-specific rules and unit tests | Known secure/vulnerable fixtures classified | Not started |
+| M3 — Deterministic | Agent-specific rules, trusted fixture registry, persistence, and reporting | Known secure/vulnerable fixtures classified and end-to-end findings displayed | Complete; awaiting review |
 | M4 — Lab | Isolated agent target, synthetic tools/data, ground-truth corpus | Test scenarios repeatable | Not started |
 | M5 — Adaptive | Bounded model-assisted tests and evidence capture | Observable outcomes logged; repeated runs supported | Not started |
 | M6 — Hybrid | Finding normalization, validation, deduplication, severity | Traceable cross-scanner results | Not started |
@@ -342,7 +361,7 @@ These are **open decisions**, not blockers to bootstrapping the application skel
 
 **Current status:** M2 is implemented and verified against disposable PostgreSQL and the Docker service stack. It provides an authenticated constrained target registry, durable PostgreSQL leasing, safe mock execution, cancellation, bounded retries/timeouts, expired-lease recovery, persisted results, and dashboard workflows. The configured Supabase direct hostname did not resolve from the development machine, so the M2 migration has not yet been applied to the hosted database.
 
-**Next action:** Review M2, update `DATABASE_URL` to a reachable Supabase connection/pooler endpoint, and apply migrations. Do not begin **M3 — Deterministic scanning** without explicit approval.
+**Next action:** Review M3, update `DATABASE_URL` to a reachable Supabase connection/pooler endpoint, and apply migrations. Do not begin **M4 — Adaptive scanning** without explicit approval.
 
 ---
 
