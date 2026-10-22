@@ -33,7 +33,7 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
     environment:
-      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      DATABASE_URL: ${DATABASE_URL_DOCKER:-${DATABASE_URL:?DATABASE_URL is required}}
       DATABASE_SSL: ${DATABASE_SSL:-true}
       API_PORT: "3000"
       WEB_ORIGIN: ${WEB_ORIGIN:-http://localhost:5173}

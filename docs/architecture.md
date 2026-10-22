@@ -105,7 +105,7 @@ adaptive job → bounded planner → provider → strict probe validator
 
 The deterministic rule engine and adaptive engine share neither decision logic nor result tables. The adaptive planner sees prior classifications, not unrestricted target state. Provider output is untrusted and must match the exact expected probe ID, class, and secure/vulnerable scenario variant. Model-mediated proposals still pass through M4 authorization, scope, and approval controls.
 
-The API worker retains PostgreSQL leasing, timeout, retry, recovery, and cancellation-before-persistence semantics. `adaptive_scan_results` and `adaptive_findings` store application reporting records. Hybrid correlation across deterministic and adaptive records is intentionally absent until M6.
+The API worker retains PostgreSQL leasing, timeout, retry, recovery, and cancellation-before-persistence semantics. `adaptive_scan_results` and `adaptive_findings` store application reporting records separately from the M6 hybrid report tables.
 
 ## M6 hybrid assessment and correlation flow
 

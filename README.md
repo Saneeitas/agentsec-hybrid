@@ -1,48 +1,10 @@
 # Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents
 
 > **Research title:** A Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents using CTRL F2  
-> **Status:** M7 controlled comparative evaluation completed and verified locally; awaiting review
+> **Status:** M8 final validation and academic handover complete; deployment blockers documented
 > **Organization:** CTRL F2 (proposed case-study environment; access and scope require explicit authorization)  
 > **Document role:** Living project overview and progress index. The repository's requirements, architecture, decisions, and experiments provide the detailed source of truth.
-You are the lead software engineer responsible for implementing my Master's cybersecurity capstone project.
-
-First, read the repository's README.md thoroughly. Treat it as the primary project baseline and follow its architecture, requirements, development workflow, research constraints and implementation milestones.
-
-The project is titled:
-
-**A Hybrid Vulnerability Assessment Framework for Secure Autonomous AI Agents using CTRL F2.**
-
-We are implementing a hybrid cybersecurity assessment platform combining deterministic vulnerability scanning and non-deterministic adaptive security testing.
-
-**Current milestone: M7 — Experimental Evaluation and Comparative Analysis.**
-
-The M1 monorepo includes:
-
-- React + TypeScript frontend.
-- Node.js + TypeScript + Fastify backend.
-- Python + FastAPI scanning service.
-- Supabase-hosted PostgreSQL database accessed by the TypeScript/Fastify backend through Drizzle ORM.
-- Docker Compose orchestration for local application services; no PostgreSQL container is required.
-- Versioned API contracts.
-- Environment configuration examples.
-- Basic unit, integration and service health tests.
-
-Establish working communication between the TypeScript API and Python scanning engine through HTTP/JSON.
-
-Create the initial architecture, requirements and progress documentation specified in the README.
-
-**Important instructions:**
-
-1. Work incrementally, following the milestones in README.md.
-2. Do not implement the actual vulnerability scanning engine or integrate an LLM yet.
-3. Do not introduce unnecessary technologies or services.
-4. Follow secure software engineering practices.
-5. Run relevant tests and verify the services work together.
-6. Update README.md and docs/progress.md with completed work, test results, blockers and next steps.
-7. Do not mark requirements complete unless they have been implemented and verified.
-8. Do not proceed beyond Milestone M1 without my approval.
-
-Milestones M1–M6 are complete and M7 is approved. Do not proceed to M8 without explicit approval.
+This repository contains the implemented capstone platform and its frozen controlled evaluation. Milestones M1–M7 are complete; M8 final validation and handover is approved. No production deployment, real-model evaluation, or new detection research is authorized as part of M8.
 ## 1. Overview
 
 This master's cybersecurity capstone develops and evaluates a **hybrid vulnerability assessment framework** for autonomous AI agent deployments. It combines:
@@ -129,14 +91,14 @@ Use a suitable Supabase connection endpoint for the application's connection lif
 
 | Layer | Choice | Purpose |
 |---|---|---|
-| Web | React + TypeScript + Tailwind CSS | Assessment dashboard |
+| Web | React + TypeScript + repository CSS | Assessment dashboard |
 | API | Node.js + TypeScript + Fastify | Authentication, targets, jobs, reporting API |
 | Scanner | Python + FastAPI | Deterministic and adaptive assessments |
 | Persistence | Supabase PostgreSQL + Drizzle ORM | Managed application database for scan jobs, targets, findings, and experiment metadata |
 | Orchestration | Docker Compose | Local application services and isolation without a required PostgreSQL container |
-| Lab target | Minimal TypeScript or Python AI agent (TBD) | Controlled security scenarios |
-| Deterministic tools | Custom rules first; evaluate Semgrep, Checkov, Gitleaks | Supported static/configuration checks |
-| Adaptive model | Provider interface; hosted or local model TBD | Generate/adapt bounded test cases |
+| Lab target | Deterministic Python simulator with synthetic tools | Controlled security scenarios |
+| Deterministic tools | Custom DET-001–DET-008 rule engine | Supported manifest checks |
+| Adaptive model | Deterministic mock default; optional unverified OpenAI-compatible adapter | Generate/select bounded test cases |
 | Testing | Vitest/Supertest, pytest, integration and end-to-end tests | Quality and research validation |
 
 **Do not add dependencies or services solely for architectural novelty.** Pin versions and document licenses, resource needs, and costs before introducing external scanners or models.
@@ -175,7 +137,7 @@ Use a suitable Supabase connection endpoint for the application's connection lif
 └── README.md
 ```
 
-M1 creates the web, API, scanner, contracts, infrastructure, and documentation paths shown above. Research and lab paths remain planned for later milestones.
+The laboratory is implemented inside the scanner package; research protocol, corpus and artifacts are under `research/`.
 
 ### M1 local setup
 
@@ -207,7 +169,7 @@ M2 accepts only confirmed synthetic fixtures with identifiers matching `lab://..
 
 ### M3 deterministic scanning
 
-Successful deterministic jobs run a data-only rule engine. Register `lab://secure-agent`, `lab://vulnerable-agent`, or `lab://incomplete-agent`. Unknown, malformed, traversal-like, or unsupported-version fixtures fail closed. M5 subsequently adds adaptive execution; hybrid jobs remain unsupported until M6.
+Successful deterministic jobs run a data-only rule engine. Register `lab://secure-agent`, `lab://vulnerable-agent`, or `lab://incomplete-agent`. Unknown, malformed, traversal-like, or unsupported-version fixtures fail closed. Adaptive and hybrid execution are implemented for their exact supported mappings.
 
 The `agent-deployment/v1` manifest covers identity/capabilities, tools, operations, authorization/approval, resource scopes, credential references/redaction, network controls, and deployment controls. Missing or unknown values remain insufficient evidence.
 
@@ -257,6 +219,20 @@ M7 adds a frozen, independently labeled five-case/eight-objective evaluation cor
 The prospective protocol specifies eligibility, undefined metrics, failures, three repetitions, rotating condition order, descriptive analysis, and threats to validity. Pilot artifacts are separated from the final `m7-final-001` study. Machine-readable raw/scored results, CSV metrics, manifests, SHA-256 hashes, failures/exclusions, comparative summary, and limitations are under `research/experiments`.
 
 The final controlled simulation completed all 45 runs. Eligibility-adjusted case-level precision, recall, F1, evidence coverage, completion, and detected-set reproducibility were 1.0 for all conditions, with zero observed false positives. These values describe only the deliberately constrained synthetic corpus: C1 covered 31 eligible units, C2 only 6, and C3 32. They do not demonstrate statistical superiority, production effectiveness, or real-model prompt-injection detection. No inferential test was performed because the small purposive corpus and deterministic mock repetitions do not support it.
+
+### M8 final handover
+
+M8 performs no new detection or research experiment. It audits implemented claims, maps requirements to code/tests/evidence, documents the actual interfaces and five-migration schema, records residual security/deployment risks, and supplies reproducibility, deployment and supervisor-demonstration runbooks.
+
+Start with:
+
+- `docs/traceability.md` for verified, partial, unverified and out-of-scope requirements.
+- `docs/technical-reference.md` for interfaces, schema, engines and troubleshooting.
+- `docs/security-review.md` for confirmed controls and residual risks.
+- `docs/deployment-runbook.md` for configuration and operational readiness.
+- `docs/reproducibility.md` for tested setup and frozen-study verification.
+- `research/HANDOVER.md` for the academic methodology, results and interpretation.
+- `docs/supervisor-demo.md` for the demonstration sequence.
 
 ## 5. Key functional requirements
 
@@ -346,13 +322,13 @@ Run adaptive tests repeatedly and report variability. A detection is **confirmed
 |---|---|---|---|
 | M0 — Baseline | README, requirements draft, architecture and decisions | Scope and assumptions documented | Complete |
 | M1 — Bootstrap | Monorepo, Compose, web/API/scanner/Supabase integration skeleton | All services start; health checks pass | Complete |
-| M2 — Scan orchestration vertical slice | Constrained target registry, durable scan lifecycle, mock scanner dispatch, persisted results, dashboard | End-to-end lifecycle plus cancellation, retry, leasing, and recovery tests pass | **Complete — awaiting review** |
-| M3 — Deterministic | Agent-specific rules, trusted fixture registry, persistence, and reporting | Known secure/vulnerable fixtures classified and end-to-end findings displayed | Complete; awaiting review |
-| M4 — Lab | Isolated deterministic simulator, synthetic tools/data, ground-truth corpus | Secure/vulnerable scenarios repeatable with redacted traces | Complete; awaiting review |
-| M5 — Adaptive | Bounded evidence-first adaptive planner, providers, lab execution, persistence, and reporting | Mock-provider workflow verified; real provider explicitly unverified | Complete; awaiting review |
-| M6 — Hybrid | Explicit deterministic/adaptive correlation, provenance, partial reports, and dashboard | Traceable cross-scanner results | Complete; awaiting review |
-| M7 — Evaluation | Frozen protocol/corpus, isolated C1/C2/C3 runner, scoring, artifacts, and descriptive analysis | Metrics and limitations documented | Complete; awaiting review |
-| M8 — Handover | Documentation, deployment instructions, demo | Reproducible setup and final review | Not started |
+| M2 — Scan orchestration vertical slice | Constrained target registry, durable scan lifecycle, mock scanner dispatch, persisted results, dashboard | End-to-end lifecycle plus cancellation, retry, leasing, and recovery tests pass | Complete |
+| M3 — Deterministic | Agent-specific rules, trusted fixture registry, persistence, and reporting | Known secure/vulnerable fixtures classified and end-to-end findings displayed | Complete |
+| M4 — Lab | Isolated deterministic simulator, synthetic tools/data, ground-truth corpus | Secure/vulnerable scenarios repeatable with redacted traces | Complete |
+| M5 — Adaptive | Bounded evidence-first adaptive planner, providers, lab execution, persistence, and reporting | Mock-provider workflow verified; real provider explicitly unverified | Complete |
+| M6 — Hybrid | Explicit deterministic/adaptive correlation, provenance, partial reports, and dashboard | Traceable cross-scanner results | Complete |
+| M7 — Evaluation | Frozen protocol/corpus, isolated C1/C2/C3 runner, scoring, artifacts, and descriptive analysis | Metrics and limitations documented | Complete |
+| M8 — Handover | Traceability, validation, security/deployment/reproducibility guides, research handover and demo | Reproducible setup and final review | Complete; awaiting final review |
 
 ## 10. Development workflow and AI IDE agent instructions
 
@@ -375,27 +351,22 @@ For each meaningful task, the IDE agent must:
 9. **Avoid scope creep.** Finish the current milestone before adding optional tools, providers, or infrastructure.
 10. **Summarize at the end of each session:** implemented, verified, outstanding, documentation updated, and recommended next task.
 
-### Suggested first IDE-agent task
-
-> Read this README and treat it as the project baseline. Initialize M1 only: create the minimal monorepo with React/TypeScript web, Fastify/TypeScript API, FastAPI/Python scanner, Supabase PostgreSQL access through Drizzle ORM, Docker Compose for the local application services, versioned API contracts, environment examples, and basic tests. Do not add a PostgreSQL container to Docker Compose. Implement health endpoints and verify API-to-scanner HTTP/JSON communication. Use secure defaults and no real scan targets. Create `docs/requirements.md`, `docs/architecture.md`, and `docs/progress.md`. Do not implement vulnerability scanning, authentication shortcuts, or LLM integration yet. Run available checks, document exact commands and results, and update this README and progress log before finishing.
-
 ## 11. Decisions pending technical review
 
-- Exact AI agent framework and supported deployment formats for the MVP.
-- Hosted vs local LLM provider, model, data handling, and budget.
-- Initial deterministic scanner integrations versus custom-only rules.
-- The vulnerability corpus size and final test taxonomy.
-- Authentication/authorization approach for single-researcher local use vs multi-user deployment.
-- Job queue mechanism if HTTP-based orchestration becomes insufficient.
-- CTRL F2 case-study scope, access approvals, and data-use permissions.
+- Production identity/RBAC and attributable authorization records.
+- Approved real-model provider, data-processing terms, endpoint and experimental protocol.
+- Evidence retention, deletion, encryption and access policy.
+- Hosted monitoring, rate limiting, egress control, backup/restore and incident response.
+- A larger independently reviewed evaluation corpus and appropriate future statistical design.
+- CTRL F2 case-study authorization, scope and data-use approval.
 
-These are **open decisions**, not blockers to bootstrapping the application skeleton.
+These are blockers to broader deployment or stronger research claims, not to the completed isolated academic prototype.
 
 ## 12. Current status and next action
 
-**Current status:** M7 is implemented and locally verified as a controlled deterministic-mock simulation study. The prospective protocol and independently labeled corpus are frozen; 45 final C1/C2/C3 runs and their raw/scored artifacts are preserved with hashes. Results are descriptive and eligibility-adjusted. M1–M6 regressions remain verified. The optional real provider and hosted Supabase deployment remain unverified.
+**Current status:** M1–M8 are complete for the isolated academic prototype. Final regression validation passed locally, documentation is traceable to implementation/evidence, the academic handover and supervisor demo are prepared, and frozen M7 hashes remain unchanged. The optional real provider, hosted Supabase deployment, production identity/operations and external security assessment remain unverified.
 
-**Next action:** Review M7 and its research-validity limitations. Do not begin **M8 — Final documentation and deployment** without explicit approval.
+**Next action:** Conduct the supervisor/final review using `docs/supervisor-demo.md`. Resolve the blockers in `docs/traceability.md` before any deployment expansion. No production deployment is authorized by this handover.
 
 ---
 

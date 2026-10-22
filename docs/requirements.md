@@ -17,7 +17,7 @@ Status values are **not started**, **in progress**, and **verified**. A requirem
 
 ## MVP functional requirements
 
-M2 partially implements the infrastructure portions of FR-01, FR-02, FR-03, FR-09, and FR-10 using synthetic targets and mock results. These broader MVP requirements are not marked complete because actual assessment behavior and full reporting remain later-milestone work. FR-04 through FR-08 and FR-11 through FR-14 remain not started.
+Current cross-milestone functional status is maintained in `docs/traceability.md`. Several requirements are intentionally partial despite completed milestones, including attributable authorization metadata, per-scan export, full reproducibility metadata, comparative dashboard reporting, identity/RBAC, and evidence retention controls.
 
 ## Milestone M2 — Scan Job Management and Orchestration
 
@@ -118,4 +118,20 @@ The roadmap's comparative C1/C2/C3 milestone is implemented as a controlled simu
 | M7-07 | Research artifacts | Protocol, corpus/hash manifest, raw/scored JSON, CSV metrics, run manifest, failure/exclusion log, summary, and validity report are preserved | Verified |
 | M7-08 | Research integrity | Pilot is separate, amendments are documented, no held-out tuning occurs, and mock results are not represented as real-model or production evidence | Verified |
 | M7-09 | Verification and scope | Evaluation tests plus M1–M6 regressions, lint, type checks, builds, audit, PostgreSQL, and container workflows pass; M8 is not started | Verified |
+
+## Milestone M8 — Final Validation, Documentation and Academic Handover
+
+M8 changes documentation and validation only. Frozen M7 evidence and assessment behavior must remain unchanged.
+
+| ID | Requirement | Acceptance criteria | Status |
+|---|---|---|---|
+| M8-01 | Repository audit | Verified/partial/unverified/out-of-scope requirements, risks and blockers map to implementation and evidence | Verified |
+| M8-02 | Technical documentation | Architecture, interfaces, migrations, rules, lab, adaptive, hybrid, trust and operations match code | Verified |
+| M8-03 | Research handover | Problem, methods, frozen results, interpretation, limitations and future work are accurate | Verified |
+| M8-04 | Reproducibility | Exact setup/scan/evaluation commands and checklist are exercised without overwriting M7 | Verified |
+| M8-05 | Security review | Confirmed controls, residual risk and unverified assumptions are explicit without audit/pen-test claims | Verified |
+| M8-06 | Deployment readiness | Supabase, variables, migrations, health, monitoring, backup/recovery and blockers are documented | Verified |
+| M8-07 | Regression evidence | Full tests, builds, audit, PostgreSQL, containers, three scan modes and secret scans are recorded | Verified |
+| M8-08 | Demonstration and completion | Supervisor script, walkthrough and completion checklist distinguish completed work from blockers | Verified |
+| M8-09 | Frozen evidence integrity | Baseline and post-M8 hashes for M7 protocol, corpus and final artifacts match exactly | Verified |
 

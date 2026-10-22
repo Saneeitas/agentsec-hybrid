@@ -317,3 +317,48 @@ These perfect fixture results do not establish general effectiveness. C2's denom
 
 Review M7 protocol, corpus, scoring, artifacts, and limitations. Do not begin M8 without explicit approval.
 
+## 2026-10-22 — M8 final validation, documentation and academic handover
+
+### Audit outcome
+
+- Added a requirements traceability matrix linking milestones and MVP requirements to implementation and actual evidence.
+- Classified important partial capabilities: target authorization lacks attributable approver metadata; authentication is a shared local token; reproducibility metadata is incomplete in application records; comparative reports are file-based; per-scan CSV export and retention controls are absent.
+- Recorded unverified capabilities: hosted Supabase, real provider, production deployment, backup/restore, load/chaos behavior, penetration testing and independent audit.
+- Recorded deployment blockers: identity/RBAC, rate limiting, observability/readiness, evidence lifecycle, backup/restore, egress controls and authorized deployment security review.
+
+### Documentation completed
+
+- `docs/traceability.md` — verified/partial/unverified/out-of-scope matrix and blockers.
+- `docs/technical-reference.md` — service responsibilities, APIs, migration sequence, DET rules, lab/adaptive/hybrid semantics and troubleshooting.
+- `docs/security-review.md` — confirmed controls, residual risk and scope-limited security acceptance.
+- `docs/deployment-runbook.md` — Supabase/TLS procedure, variables, health, monitoring, backup/recovery, upgrades and incidents.
+- `docs/reproducibility.md` — verified setup, scans, frozen hashes and temporary-output evaluation reproduction.
+- `docs/final-verification.md` — commands, versions, timestamps, results and limitations.
+- `research/HANDOVER.md` — research problem, framework, methodology, actual results, interpretation, validity threats and future work.
+- `docs/supervisor-demo.md` and `docs/completion-checklist.md` — demonstration and final handover package.
+
+### Final regression evidence
+
+- Verification ran 2026-10-22 04:09–04:12 WAT with Node 22.14.0, npm 11.7.0, Python 3.13.3, Docker 28.4.0 and Compose 2.39.4.
+- Python: 61 passed; Ruff passed; one upstream Starlette/AnyIO deprecation warning remains.
+- TypeScript checks passed; API unit tests 8 passed; dashboard tests 5 passed; production builds passed.
+- Disposable PostgreSQL 16 migrations `0000`–`0004` passed; API integration tests 17 passed.
+- `npm audit` reported zero known vulnerabilities.
+- Compose validation/build passed and web/API/scanner became healthy.
+- Container regressions: deterministic completed with eight findings; adaptive mock completed with one confirmed finding; hybrid completed all components with eight unique results (one corroborated, seven configuration-only).
+- A temporary-output M7 reproduction completed 45 runs and reproduced the frozen case-level confusion counts without writing to `research/experiments/m7-final`.
+- High-confidence credential pattern scan and research-artifact raw synthetic-secret scan found no matches; `.env` ignore behavior passed. Gitleaks/TruffleHog and a Python CVE scanner were not installed, so no claim of comprehensive secret/dependency audit is made.
+- `git diff --check` passed.
+
+### Frozen research integrity
+
+Pre- and post-M8 SHA-256 values matched for the protocol, corpus and every M7 final artifact. Corpus remains `fd914d995c090140d88dcf4e8b5119f55402eda216953526c8309901096f177d`; protocol remains `a1344722eb8e08ba56e5ac8b58145527982d2f5a6fce6449c9867ca7bc01bdf8`.
+
+### Final limitations and handover state
+
+The project is complete as an isolated academic prototype using synthetic fixtures and a deterministic mock provider. It is not production-ready, not a real-model effectiveness study, and not an assessment of CTRL F2 systems. Supabase hosted connectivity/migrations remain an explicit blocker and TLS verification must not be disabled. No penetration test, external audit or production deployment occurred.
+
+### Next action
+
+Supervisor/final review. Resolve documented deployment and research blockers before expanding scope; no further milestone or production action is authorized.
+
